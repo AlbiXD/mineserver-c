@@ -8,7 +8,7 @@
 #include <string.h>
 #include <errno.h>
 #include "util.h"
-#define MAX_LINE_LEN 64
+#define MAX_LINE_LEN 32
 typedef struct Config {
 	char* host;
 	unsigned short port;
@@ -35,6 +35,8 @@ Config* init_cfg(void);
  */
 int parse_cfg(int fd, Config* cfg);
 	
+void clean_cfg(Config * cfg);
+
 /**
  * @brief Writes a default configuration to the given file descriptor.
  *

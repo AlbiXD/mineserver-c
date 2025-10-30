@@ -30,10 +30,24 @@ Config* init_cfg(){
 
 int parse_cfg(int fd, Config* cfg){
 	char buf[MAX_LINE_LEN];
-	while(get_line(fd, buf, MAX_LINE_LEN) > 0){
-		
+	int n = 0;
+
+	while((n = get_line(fd, buf, MAX_LINE_LEN)) > 0){
+		char* str = strtok(buf, "=");
+		if(strcmp(str, "ip") == 0){
+			cfg->host = strdup(buf+3);
+		}
+		if(strcmp(str, "port") == 0){
+			cfg->port = (unsigned short) atoi(buf+5);
+		}
 	}
+
 	return 0;
+}
+
+void clean_cfg(Config * cfg){
+
+	return;
 }
 void write_default(int fd){
 	write(fd, "ip=localhost\n", sizeof("ip=localhost\n")-1);

@@ -1,6 +1,6 @@
 #include "../include/util.h"
 
-int get_line(int fd, char *buf, size_t max_len)
+int get_line(int fd, char *buf, int max_len)
 {
     char c;
     int i = 0;
@@ -11,9 +11,12 @@ int get_line(int fd, char *buf, size_t max_len)
             printf("Line is too long!\n");
             exit(1);
         }
-        buf[i++] = c;
-        if (c == '\n')
+        buf[i] = c;
+        if (c == '\n'){
+            buf[i] = 0;
             break;
+        }
+        i++;
     }
     return i;
 }

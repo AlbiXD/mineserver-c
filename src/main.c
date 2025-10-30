@@ -15,6 +15,8 @@
 int main(){	
 	Config* cfg = init_cfg();
 	printf("%s\n", cfg->host);
+	printf("%d", cfg->port);
+
 	free(cfg);
 	return 0;	
 }
