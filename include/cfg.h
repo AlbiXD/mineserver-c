@@ -4,7 +4,7 @@
 #include <unistd.h>
 
 typedef struct Config {
-	char host[16];
+	char* host;
 	unsigned short port;
 } Config;
 
@@ -17,6 +17,16 @@ typedef struct Config {
  */
 Config* init_cfg(void);
 
+/**
+ * @brief Parse config data from a file descriptor.
+ *
+ * Reads key=value pairs (e.g., "host=127.0.0.1") from the given fd
+ * and loads them into a Config struct.
+ *
+ * @param fd Open file descriptor to read from.
+ * @return 0 on success, <0 on failure.
+ */
+int parse_cfg(int fd);
 	
 /**
  * @brief Writes a default configuration to the given file descriptor.

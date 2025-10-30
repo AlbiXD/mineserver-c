@@ -30,6 +30,10 @@ Config* init_cfg(){
 	return cfp; 	
 }
 
+void parse_cfg(int fd){
+
+	return 0;
+}
 void write_default(int fd){
 	write(fd, "ip=localhost\n", sizeof("ip=localhost\n")-1);
 	write(fd, "port=25565\n", sizeof("port=25565\n")-1);
