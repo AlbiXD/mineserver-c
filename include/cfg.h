@@ -1,8 +1,14 @@
 #ifndef CFG_H
 #define CFG_H
 
+#include <stdio.h>
 #include <unistd.h>
-
+#include <stdlib.h>
+#include <fcntl.h>
+#include <string.h>
+#include <errno.h>
+#include "util.h"
+#define MAX_LINE_LEN 64
 typedef struct Config {
 	char* host;
 	unsigned short port;
@@ -24,9 +30,10 @@ Config* init_cfg(void);
  * and loads them into a Config struct.
  *
  * @param fd Open file descriptor to read from.
+ * @param cfg A pointer to the Config structure to store stuff.
  * @return 0 on success, <0 on failure.
  */
-int parse_cfg(int fd);
+int parse_cfg(int fd, Config* cfg);
 	
 /**
  * @brief Writes a default configuration to the given file descriptor.
