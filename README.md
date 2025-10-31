@@ -36,6 +36,6 @@ port=25565
 
 ---
 
-## 🧍 Author
+## Author
 **Albi Zhaku** — NJIT CS Student  
 > building a minecraft server in C cause why not
