@@ -45,7 +45,7 @@ int parse_cfg(int fd, Config* cfg){
 	return 0;
 }
 
-void clean_cfg(Config * cfg){
+void free_cfg(Config * cfg){
 
 	return;
 }

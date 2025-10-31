@@ -35,7 +35,7 @@ Config* init_cfg(void);
  */
 int parse_cfg(int fd, Config* cfg);
 	
-void clean_cfg(Config * cfg);
+void free_cfg(Config * cfg);
 
 /**
  * @brief Writes a default configuration to the given file descriptor.

@@ -1,5 +1,8 @@
 {
     "files.associations": {
-        "errno.h": "c"
+        "errno.h": "c",
+        "socket.h": "c",
+        "cfg.h": "c",
+        "inet.h": "c"
     }
 }
