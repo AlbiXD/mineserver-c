@@ -39,13 +39,19 @@ Server *init_server(Config *cfg)
 void start_server(Server *server)
 {
     printf("Starting Server on IP: %s:%d\n", server->cfg->host, server->port);
-    bind(server->server_fd, (struct sockaddr *)&server->server_addr, sizeof(server->server_addr));
-    listen(server->server_fd, 5);
+    if(bind(server->server_fd, (struct sockaddr *)&server->server_addr, sizeof(server->server_addr)) < 0){
+        fprintf(stderr, "Failed to bind on port %d: %s\n", server->port, strerror(errno));
+        //Call shut_down() perhaps?
+        exit(1);
+    }
+     if(listen(server->server_fd, 5) < 0){
+        fprintf(stderr, "Failed to listen on port %d: %s\n", server->port, strerror(errno));
+        //Call shut_down() perhaps?
+        exit(1);
+     }
 
     printf("Server is now online\n");
-
-    int cfd = accept(server->server_fd, NULL, NULL);
-
+    
     for(;;);
     
     return;
