@@ -41,17 +41,15 @@ void start_server(Server *server)
     printf("Starting Server on IP: %s:%d\n", server->cfg->host, server->port);
     if(bind(server->server_fd, (struct sockaddr *)&server->server_addr, sizeof(server->server_addr)) < 0){
         fprintf(stderr, "Failed to bind on port %d: %s\n", server->port, strerror(errno));
-        //Call shut_down() perhaps?
-        exit(1);
+        server_stop(server);
     }
      if(listen(server->server_fd, 5) < 0){
         fprintf(stderr, "Failed to listen on port %d: %s\n", server->port, strerror(errno));
-        //Call shut_down() perhaps?
-        exit(1);
+        server_stop(server);
      }
 
     printf("Server is now online\n");
-    
+
     for(;;);
     
     return;
@@ -59,5 +57,8 @@ void start_server(Server *server)
 
 void server_stop(Server *server)
 {
+    close(server->server_fd);
+    free(server);
+    exit(1);
     return;
 }
