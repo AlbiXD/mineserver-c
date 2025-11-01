@@ -59,6 +59,4 @@ void server_stop(Server *server)
 {
     close(server->server_fd);
     free(server);
-    exit(1);
-    return;
 }
