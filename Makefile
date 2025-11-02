@@ -1,10 +1,12 @@
 CFLAGS = -Wall -Wextra -g
 CC = gcc
 
-server: build/util.o build/cfg.o build/main.o build/server.o
-	$(CC) $(CFLAGS) build/util.o build/cfg.o build/main.o build/server.o -o server
+server: build/util.o build/cfg.o build/main.o build/server.o build/client.o
+	$(CC) $(CFLAGS) build/util.o build/cfg.o build/main.o build/client.o build/server.o -o server
 build/cfg.o: src/cfg.c
 	$(CC) $(CFLAGS)  -c src/cfg.c -o build/cfg.o
+build/client.o: src/client.c
+	$(CC) $(CFLAGS)  -c src/client.c -o build/client.o
 build/server.o: src/server.c
 	$(CC) $(CFLAGS)  -c src/server.c -o build/server.o
 build/util.o: src/util.c

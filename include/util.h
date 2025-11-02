@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <poll.h>
+#include "client.h"
 /**
  * Reads one line from a file descriptor.
  *
@@ -14,5 +16,6 @@
  */
 int get_line(int fd, char* buf, int maxlen);
 
+int init_tables(struct pollfd* pfd, Client* clients, int pfd_n, int client_n);
 
 #endif

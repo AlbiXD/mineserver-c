@@ -14,6 +14,7 @@ typedef struct{
     Config* cfg;
     int port;
     int max_players;
+    int online_players;
 } Server;
 /*
 

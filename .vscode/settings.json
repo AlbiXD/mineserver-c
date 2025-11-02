@@ -3,6 +3,7 @@
         "errno.h": "c",
         "socket.h": "c",
         "cfg.h": "c",
-        "inet.h": "c"
+        "inet.h": "c",
+        "client.h": "c"
     }
 }
