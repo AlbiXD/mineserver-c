@@ -23,11 +23,8 @@ typedef struct{
 
 Server * init_server(Config* cfg);
 
-
 void start_server(Server *server);
 
 void server_stop(Server *server);
-
-
 
 #endif

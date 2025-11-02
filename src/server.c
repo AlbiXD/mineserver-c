@@ -75,7 +75,7 @@ void start_server(Server *server)
     {
         poll(pfd, server->max_players + 1, -1);
 
-        if (pfd[0].revents & POLLIN)
+        if (pfd[0].revents & POLLIN) 
         { // Player connection handle
             for (;;){
                 int cfd = accept(server->server_fd, NULL, NULL); //Rappid accept clients
@@ -85,17 +85,17 @@ void start_server(Server *server)
                 }                
                 if (server->online_players < server->max_players){ // If server is not full assign new player
                         printf("Accepted user!\n");
-                        server->online_players++;
                         add_client(pfd, clients, pfd_n, max_clients); //Adds client to client list and assigns client to pfd
+                        server->online_players++;
 
                 }else{//If server is full close gracefully
                     printf("Server is full!\n");
                     close(cfd);
                 }
             }
+            pfd[0].revents = 0;
         }
 
-        pfd[0].revents = 0;
     }
 
     return;

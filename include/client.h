@@ -16,6 +16,7 @@ typedef enum {
 typedef struct{
     int cfd;
     int pfd_index;
+    int client_index;
     ClientState state;
 } Client;
 
