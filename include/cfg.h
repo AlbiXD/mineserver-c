@@ -12,6 +12,7 @@
 typedef struct Config {
 	char* host;
 	unsigned short port;
+	int max_players;
 } Config;
 
 

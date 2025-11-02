@@ -13,6 +13,7 @@ typedef struct{
     struct sockaddr_in server_addr;
     Config* cfg;
     int port;
+    int max_players;
 } Server;
 /*
 

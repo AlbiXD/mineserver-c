@@ -16,6 +16,7 @@ int main(void){
 	//Parse Config
 	Config *cfg = init_cfg(); 
 
+	printf("%d\n", cfg->max_players);
 	//Pass the config to the server
 	Server *server = init_server(cfg);
 	start_server(server);

@@ -1,4 +1,4 @@
-CFLAGS = -Wall -Wextra
+CFLAGS = -Wall -Wextra -g
 CC = gcc
 
 server: build/util.o build/cfg.o build/main.o build/server.o

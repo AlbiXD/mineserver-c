@@ -11,6 +11,7 @@ Config* init_cfg(){
 		printf("Creating new server configs...\n");
 		cfp->host = "localhost";
 		cfp->port = 25565;
+		cfp->max_players = 10;
 	} else if (errno == EEXIST) {
 		fd = open(cfg, O_RDONLY);
 		printf("Loading existing server configs...\n");
@@ -40,6 +41,9 @@ int parse_cfg(int fd, Config* cfg){
 		if(strcmp(str, "port") == 0){
 			cfg->port = (unsigned short) atoi(buf+5);
 		}
+		if(strcmp(str, "max-players") == 0){
+			cfg->max_players = (unsigned short) atoi(buf+12);
+		}
 	}
 
 	return 0;
@@ -52,4 +56,6 @@ void free_cfg(Config * cfg){
 void write_default(int fd){
 	write(fd, "ip=localhost\n", sizeof("ip=localhost\n")-1);
 	write(fd, "port=25565\n", sizeof("port=25565\n")-1);
+	write(fd, "max-players=10\n", sizeof("max-players=10\n")-1);
+
 }
