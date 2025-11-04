@@ -2,6 +2,9 @@
 #define CLIENT_H
 
 #include <poll.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+
 typedef enum {
     STATE_NONE,
     STATE_HANDSHAKE_START,
@@ -18,9 +21,10 @@ typedef struct{
     int pfd_index;
     int client_index;
     ClientState state;
+    struct sockaddr_in client_addr;
 } Client;
 
 
-int add_client(struct pollfd* pfd, Client* client, int pfd_n, int client_n);
+int add_client(struct pollfd* pfd, Client* client, int pfd_n, int client_n, int cfd, struct sockaddr_in* client_addr);
 
 #endif

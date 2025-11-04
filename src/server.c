@@ -73,19 +73,33 @@ void start_server(Server *server)
 
     for (;;)
     {
-        poll(pfd, server->max_players + 1, -1);
+        int p = poll(pfd, pfd_n, -1);
 
-        if (pfd[0].revents & POLLIN) 
-        { // Player connection handle
+        
+        for(int i = 1; i < pfd_n-1; i++){ //Handle client stuff
+            if(pfd[i].fd == -1) continue;
+
+            //PACKET READ
+            if(pfd[i].revents & POLLIN); //Handle this mother fucker twin
+        }
+
+        if (pfd[0].revents & POLLIN){ // Player connection handle
             for (;;){
-                int cfd = accept(server->server_fd, NULL, NULL); //Rappid accept clients
+                struct sockaddr_in client_addr;
+                size_t cli_addr_len = sizeof(client_addr);
+                memset(&client_addr, 0, sizeof(client_addr));
+
+                int cfd = accept(server->server_fd, (struct sockaddr *) &client_addr, &cli_addr_len); //Client connection
+                int flags = fcntl(cfd, F_GETFL, 0);
+                fcntl(cfd, F_SETFL, flags | O_NONBLOCK); // Makes client socket non blocking
+
                 if (cfd < 0) { //If no more clients in the kernel queue
                     if (errno == EAGAIN || errno == EWOULDBLOCK) break; 
                     perror("accept"); break;
                 }                
                 if (server->online_players < server->max_players){ // If server is not full assign new player
                         printf("Accepted user!\n");
-                        add_client(pfd, clients, pfd_n, max_clients); //Adds client to client list and assigns client to pfd
+                        add_client(pfd, clients, pfd_n, max_clients, cfd, &client_addr); //Adds client to client list and assigns client to pfd
                         server->online_players++;
 
                 }else{//If server is full close gracefully
