@@ -4,6 +4,7 @@
         "socket.h": "c",
         "cfg.h": "c",
         "inet.h": "c",
-        "client.h": "c"
+        "client.h": "c",
+        "util.h": "c"
     }
 }

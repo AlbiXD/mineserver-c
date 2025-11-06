@@ -6,6 +6,10 @@
 #include <stdio.h>
 #include <poll.h>
 #include "client.h"
+#include <fcntl.h>
+#include <time.h>
+
+#define BUFSIZ 1024
 /**
  * Reads one line from a file descriptor.
  *
@@ -17,5 +21,7 @@
 int get_line(int fd, char* buf, int maxlen);
 
 int init_tables(struct pollfd* pfd, Client* clients, int pfd_n, int client_n);
+
+int packet_dump(int cfd);
 
 #endif

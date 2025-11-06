@@ -32,3 +32,22 @@ int init_tables(struct pollfd* pfd, Client* clients, int pfd_n, int client_n){
     }
 }
 
+
+int packet_dump(int cfd){
+    int fd = open("raw_packets.txt",  O_CREAT | O_WRONLY, 0644);
+    char buf[BUFSIZ];
+
+    time_t timer = time(NULL);
+    struct tm* tm_info;
+
+    tm_info = localtime(&timer);
+
+    size_t len = strftime(buf, BUFSIZ, "%Y-%m-%d %H-%M-%S:", tm_info);
+    ssize_t n = read(cfd, buf+len, BUFSIZ);
+    ssize_t w = write(fd, buf, n+len);
+
+    close(fd);
+
+    return w;
+
+}
