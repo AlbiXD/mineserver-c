@@ -1,16 +1,7 @@
 #include "../include/server.h"
 #include "../include/cfg.h"
-#include "../include/client.h"
-#include <string.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <poll.h>
-#include <errno.h>
-#include <fcntl.h>
+
+
 
 Server *init_server(Config *cfg)
 {
@@ -78,17 +69,21 @@ void start_server(Server *server)
 
         if (*online) // If no player is online why bother
         {
-            for (int i = 1; i < pfd_n - 1; i++)
+            for (int i = 0; i < max_clients; i++)
             { // Handle client stuff
-                if (pfd[i].fd == -1)
+                int p_index = clients[i].pfd_index;
+                if(p_index == -1) continue;
+                
+                if (pfd[p_index].fd == -1)
                     continue;
 
-                if (pfd[i].revents == POLLIN)
+                if (pfd[p_index].revents & POLLIN)
                 {
-                    int f = packet_dump(pfd[i].fd);//I just wanna see what they wrote
-                    printf("Client wrote %d bytes\n", f);
+                    // int f = packet_dump(pfd[i].fd);//I just wanna see what they wrote
+                    packet_handler(&clients[i]);
+                    // printf("Client wrote %d bytes\n", f);
                 }
-                pfd[i].revents = 0;
+                pfd[p_index].revents = 0;
             }
         }
         if (pfd[0].revents & POLLIN)

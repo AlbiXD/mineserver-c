@@ -28,7 +28,7 @@ int init_tables(struct pollfd* pfd, Client* clients, int pfd_n, int client_n){
     for(int i = 0; i < client_n; i++){
         clients[i].cfd = -1;
         clients[i].state = STATE_NONE;
-        clients[i].pfd_index = 0;
+        clients[i].pfd_index = -1;
     }
 }
 

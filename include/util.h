@@ -9,7 +9,13 @@
 #include <fcntl.h>
 #include <time.h>
 
+
+
 #define BUFSIZ 1024
+typedef struct { uint32_t cp; const char *ascii; } UTF_Map;
+
+
+
 /**
  * Reads one line from a file descriptor.
  *

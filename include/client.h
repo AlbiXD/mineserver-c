@@ -4,7 +4,7 @@
 #include <poll.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-
+#include <stdio.h>
 typedef enum {
     STATE_NONE,
     STATE_HANDSHAKE_START,

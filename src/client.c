@@ -1,4 +1,5 @@
 #include "../include/client.h"
+#include "../include/util.h"
 
 int add_client(struct pollfd *pfd, Client *client, int pfd_n, int client_n, int cfd, struct sockaddr_in* client_addr){
     for (int i = 1; i < pfd_n; i++)

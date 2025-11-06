@@ -2,12 +2,18 @@
 #define SERVER_H
 
 #include "cfg.h"
+#include "packet.h"
+#include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <poll.h>
+#include <errno.h>
+#include <fcntl.h>
+
 typedef struct{
     int server_fd;
     struct sockaddr_in server_addr;
