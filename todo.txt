@@ -1,3 +1,0 @@
--   Have a max player cap
--   Include config version or server version
--   Handle faulty config
