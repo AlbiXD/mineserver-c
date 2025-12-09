@@ -7,3 +7,4 @@
 *.txt
 build/*
 .DS_Store
+.vscode
