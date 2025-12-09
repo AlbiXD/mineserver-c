@@ -5,3 +5,4 @@
 *.dll
 *.txt
 build/*
+.DS_Store
