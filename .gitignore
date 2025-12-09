@@ -1,6 +1,7 @@
 *.exe   
 *.bin   
-*.o        
+*.o   
+*.out     
 *.obj     
 *.dll
 *.txt
