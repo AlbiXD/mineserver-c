@@ -77,13 +77,11 @@ void start_server(Server *server)
                 if (pfd[p_index].fd == -1)
                     continue;
 
-                if (pfd[p_index].revents & POLLIN)
-                {
+                if (pfd[p_index].revents & POLLIN){
                     // int f = packet_dump(pfd[i].fd);//I just wanna see what they wrote
                     packet_handler(&clients[i]);
                     // printf("Client wrote %d bytes\n", f);
                 }
-                pfd[p_index].revents = 0;
             }
         }
         if (pfd[0].revents & POLLIN)

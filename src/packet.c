@@ -2,9 +2,8 @@
 
 int packet_handler(Client *c)
 {
-    char buf[BUFSIZ];
-
-    ssize_t n = read(c->cfd, buf, BUFSIZ);
+    unsigned char* buf = c->packet_buf;
+    ssize_t n = read(c->cfd, buf, BUFSIZE);
     uint8_t packID = buf[0];
 
     printf("%d\n", packID);
@@ -17,8 +16,10 @@ int packet_handler(Client *c)
     case 0x01:
         printf("Login Protocol!\n");
         handle_login(c, buf);
+        break;
     case 0x0D:
         handle_pos(c, buf);
+        break;
     default:
         printf("Unknown Packet\n");
         break;
@@ -26,7 +27,7 @@ int packet_handler(Client *c)
     return 0;
 }
 
-int handle_handshake(Client *c, char *buf)
+int handle_handshake(Client *c, unsigned char *buf)
 {
     c->state = STATE_HANDSHAKE_START; // Handshake initiated
 
@@ -40,7 +41,7 @@ int handle_handshake(Client *c, char *buf)
     return 0;
 }
 
-int handle_login(Client *c, char *buf)
+int handle_login(Client *c, unsigned char *buf)
 {
     c->state = STATE_LOGIN_START;
     unsigned char pkt_login[] = {
@@ -56,7 +57,7 @@ int handle_login(Client *c, char *buf)
     write(c->cfd, pkt_login, 16);
 }
 
-int handle_pos(Client *c, char *buf)
+int handle_pos(Client *c, unsigned char *buf)
 {
     unsigned char pkt_poslook[] = {
         0x0D,

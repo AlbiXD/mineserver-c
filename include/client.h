@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <stdio.h>
+#define BUFSIZE 128
 typedef enum {
     STATE_NONE,
     STATE_HANDSHAKE_START,
@@ -16,7 +17,9 @@ typedef enum {
     STATE_DISCONNECTED
 } ClientState;
 
-typedef struct{
+typedef struct{    
+    char usrname[16];
+    unsigned char packet_buf[BUFSIZE];
     int cfd;
     int pfd_index;
     int client_index;
