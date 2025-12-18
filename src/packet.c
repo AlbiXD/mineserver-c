@@ -1,17 +1,64 @@
 #include "../include/packet.h"
 
+
+int read_packet(Client *c ,unsigned char *buf, int n)
+{
+    ssize_t total_read = n;
+    ssize_t r = 0;
+
+    // Drains the kernel payload buffer
+    while (1)
+    {
+        r = read(c->cfd, buf + total_read, BUFSIZE - total_read);
+
+        if (r > 0)
+        {
+            total_read += r;
+            continue;
+        }
+
+        // Person closed connection?
+        if (r == 0)
+            break;
+
+        if (r < 0)
+        {
+            // nothing left for now
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+                break;
+            // real error
+            break;
+        }
+    }
+
+    if (r == 0) return -1; // client actually closed
+
+        return total_read;
+    }
+
 int packet_handler(Client *c)
 {
-    unsigned char* buf = c->packet_buf;
-    ssize_t n = read(c->cfd, buf, BUFSIZE);
+    //Read once initially
+    unsigned char *buf = c->packet_buf;
+    int n = 0; 
+    n = read_packet(c, buf, n); 
+
+    if(n == 0) return 0;
+    if(n == -1) return -1;
+
+
+    //Get packetID
     uint8_t packID = buf[0];
+
+    //
+
 
     printf("%d\n", packID);
     switch (packID)
     {
     case 0x02:
         printf("Handshake Protocol!\n");
-        handle_handshake(c, buf);
+        handle_handshake(c, buf, n);
         break;
     case 0x01:
         printf("Login Protocol!\n");
@@ -27,14 +74,32 @@ int packet_handler(Client *c)
     return 0;
 }
 
-int handle_handshake(Client *c, unsigned char *buf)
+int handle_handshake(Client *c, unsigned char *buf, int n)
 {
+    if(n < 3) n = read_packet(c, buf, n); //should have read an extra byte at least?
+   
+    //size of string
+    uint8_t len = buf[2];
+
+    //packet_size
+    size_t size = 3 + len*2;
+    
+    //Read until we get the full packet
+    while(n < size) n = read_packet(c, buf, n);
+
+    //We got full packet + potentially next extra byte
+    size_t extra = n-size;
+    memmove(buf, buf+size, extra); 
+
+
     c->state = STATE_HANDSHAKE_START; // Handshake initiated
 
+
+
     unsigned char pkt_offline[] = {
-        0x02,       
-        0x00, 0x01, 
-        0x00, 0x2D 
+        0x02,
+        0x00, 0x01,
+        0x00, 0x2D
     };
 
     write(c->cfd, pkt_offline, 5);

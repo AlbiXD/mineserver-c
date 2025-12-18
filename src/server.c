@@ -1,8 +1,6 @@
 #include "../include/server.h"
 #include "../include/cfg.h"
 
-
-
 Server *init_server(Config *cfg)
 {
     Server *server = (Server *)malloc(sizeof(Server));
@@ -67,23 +65,28 @@ void start_server(Server *server)
     {
         int p = poll(pfd, pfd_n, -1);
 
+        // Listen for incoming player packets
         if (*online) // If no player is online why bother
         {
             for (int i = 0; i < max_clients; i++)
             { // Handle client stuff
                 int p_index = clients[i].pfd_index;
-                if(p_index == -1) continue;
-                
+                if (p_index == -1)
+                    continue;
+
                 if (pfd[p_index].fd == -1)
                     continue;
 
-                if (pfd[p_index].revents & POLLIN){
+                if (pfd[p_index].revents & POLLIN)
+                {
                     // int f = packet_dump(pfd[i].fd);//I just wanna see what they wrote
                     packet_handler(&clients[i]);
                     // printf("Client wrote %d bytes\n", f);
                 }
             }
         }
+
+        // Listen for player connections
         if (pfd[0].revents & POLLIN)
         { // Player connection handle
             for (;;)
@@ -92,7 +95,10 @@ void start_server(Server *server)
                 socklen_t cli_addr_len = sizeof(client_addr);
                 memset(&client_addr, 0, sizeof(client_addr));
 
-                int cfd = accept(server->server_fd, (struct sockaddr *)&client_addr, &cli_addr_len); // Client connection
+                int cfd = accept4(server->server_fd,
+                                  (struct sockaddr *)&client_addr,
+                                  &cli_addr_len,
+                                  SOCK_NONBLOCK);
 
                 if (cfd < 0)
                 { // If no more clients in the kernel queue
