@@ -9,7 +9,7 @@ int read_packet(Client *c ,unsigned char *buf, int n)
     // Drains the kernel payload buffer
     while (1)
     {
-        r = read(c->cfd, buf + total_read, BUFSIZE - total_read);
+        r = read(c->cfd, buf + total_read, BUFFSIZE - total_read);
 
         if (r > 0)
         {
@@ -41,7 +41,10 @@ int packet_handler(Client *c)
     //Read once initially
     unsigned char *buf = c->packet_buf;
     int n = 0; 
-    n = read_packet(c, buf, n); 
+
+    printf("Extra = %d, n = %d\n", c->packet_len, n);
+
+    n = read_packet(c, buf+c->packet_len, n-c->packet_len); 
 
     if(n == 0) return 0;
     if(n == -1) return -1;
@@ -51,7 +54,7 @@ int packet_handler(Client *c)
     uint8_t packID = buf[0];
 
     //
-
+    int retval = 0;
 
     printf("%d\n", packID);
     switch (packID)
@@ -59,19 +62,25 @@ int packet_handler(Client *c)
     case 0x02:
         printf("Handshake Protocol!\n");
         handle_handshake(c, buf, n);
+        retval = 2;
         break;
     case 0x01:
         printf("Login Protocol!\n");
         handle_login(c, buf);
+        retval = 1;
         break;
     case 0x0D:
         handle_pos(c, buf);
+        retval = 0x0D;
         break;
     default:
         printf("Unknown Packet\n");
+        retval = 0xFFF;
         break;
     }
-    return 0;
+
+    printf("Here\n");
+    return retval;
 }
 
 int handle_handshake(Client *c, unsigned char *buf, int n)
@@ -82,14 +91,20 @@ int handle_handshake(Client *c, unsigned char *buf, int n)
     uint8_t len = buf[2];
 
     //packet_size
-    size_t size = 3 + len*2;
+    int size = 3 + len*2;
     
     //Read until we get the full packet
     while(n < size) n = read_packet(c, buf, n);
 
     //We got full packet + potentially next extra byte
-    size_t extra = n-size;
-    memmove(buf, buf+size, extra); 
+    int extra = n-size;
+
+    printf("Extra in handshake %d\n", extra);
+
+    if(extra != 0){
+        memmove(buf, buf+size, extra);
+        c->packet_len = extra;
+    }  
 
 
     c->state = STATE_HANDSHAKE_START; // Handshake initiated
@@ -120,6 +135,8 @@ int handle_login(Client *c, unsigned char *buf)
 
         0x00};
     write(c->cfd, pkt_login, 16);
+
+    return 0;
 }
 
 int handle_pos(Client *c, unsigned char *buf)
@@ -142,4 +159,6 @@ int handle_pos(Client *c, unsigned char *buf)
         0x00};
 
     write(c->cfd, pkt_poslook, sizeof(pkt_poslook));
+
+    return 0;
 }

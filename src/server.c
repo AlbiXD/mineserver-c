@@ -80,7 +80,13 @@ void start_server(Server *server)
                 if (pfd[p_index].revents & POLLIN)
                 {
                     // int f = packet_dump(pfd[i].fd);//I just wanna see what they wrote
-                    packet_handler(&clients[i]);
+                    int status = 0;
+                    if((status = packet_handler(&clients[i])) < 0){
+                        //Handle Disconnect NEEDS REVISITING
+                        close(pfd[p_index].fd);
+                        pfd[p_index].fd = -1;
+                    }
+                    printf("status = %d\n", status);
                     // printf("Client wrote %d bytes\n", f);
                 }
             }

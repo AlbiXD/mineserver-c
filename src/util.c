@@ -29,7 +29,10 @@ int init_tables(struct pollfd* pfd, Client* clients, int pfd_n, int client_n){
         clients[i].cfd = -1;
         clients[i].state = STATE_NONE;
         clients[i].pfd_index = -1;
+        clients[i].packet_len = 0;
     }
+
+    return 0;
 }
 
 

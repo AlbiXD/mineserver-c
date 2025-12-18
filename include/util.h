@@ -11,7 +11,6 @@
 
 
 
-#define BUFSIZ 1024
 typedef struct { uint32_t cp; const char *ascii; } UTF_Map;
 
 
