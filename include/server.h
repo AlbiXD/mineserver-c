@@ -30,7 +30,8 @@ typedef struct{
 
 Server * init_server(Config* cfg);
 
-void disconnect_handler(struct pollfd pfd, int* online, Client* c, int client_index);
+void disconnect_handler(struct pollfd *pfd, int* online, Client* c, int max_clients);
+void handle_new_connections(Server *server, struct pollfd* pfd,  Client* clients, int pfd_n, int max_clients);
 void start_server(Server *server);
 
 void server_stop(Server *server);

@@ -61,7 +61,7 @@ void start_server(Server *server)
 
     printf("Server is now online\n");
 
-    for (;;)
+    for (;;) //Main server loop
     {
         int p = poll(pfd, pfd_n, -1);
 
@@ -79,17 +79,11 @@ void start_server(Server *server)
 
                 if (pfd[p_index].revents & POLLIN)
                 {
-                    // int f = packet_dump(pfd[i].fd);//I just wanna see what they wrote
                     int status = 0;
                     printf("Packet Recieved\n");
-                    // Split this into a function to handle player disconnect
-                    if ((status = packet_handler(&clients[i])) < 0)
-                    {
-                        // Handle Disconnect NEEDS REVISITING
-                        disconnect_handler(pfd[p_index], online, clients, i);
-                    }
-                    printf("status = %d\n", status);
-                    // printf("Client wrote %d bytes\n", f);
+                    // Handle Disconnect NEEDS REVISITING
+                    if ((status = packet_handler(&clients[i])) < 0) disconnect_handler(&pfd[p_index], online, clients, i);
+                    printf("status = %d\n", status); //DEBUG: Status of packet
                 }
             }
         }
@@ -97,39 +91,7 @@ void start_server(Server *server)
         // Listen for player connections
         if (pfd[0].revents & POLLIN)
         { // Player connection handle
-            for (;;)
-            {
-                struct sockaddr_in client_addr;
-                socklen_t cli_addr_len = sizeof(client_addr);
-                memset(&client_addr, 0, sizeof(client_addr));
-
-                int cfd = accept(server->server_fd,
-                                 (struct sockaddr *)&client_addr,
-                                 &cli_addr_len);
-
-                if (cfd < 0)
-                { // If no more clients in the kernel queue
-                    if (errno == EAGAIN || errno == EWOULDBLOCK)
-                        break;
-                    perror("accept");
-                    break;
-                }
-                if (server->online_players < server->max_players)
-                { // If server is not full assign new player
-                    printf("Accepted user!\n");
-                    int flags = fcntl(cfd, F_GETFL, 0);
-                    fcntl(cfd, F_SETFL, flags | O_NONBLOCK);                         // Makes it non blocking
-                    add_client(pfd, clients, pfd_n, max_clients, cfd, &client_addr); // Adds client to client list and assigns client to pfd
-                    (*online)++;
-                }
-                else
-                { // If server is full close gracefully
-                    printf("Server is full!\n");
-                    close(cfd);
-                }
-            }
-            printf("Here now\n");
-            pfd[0].revents = 0;
+            handle_new_connections(server, pfd, clients, pfd_n, max_clients);
         }
     }
 
@@ -143,13 +105,39 @@ void server_stop(Server *server)
     exit(1);
 }
 
-void disconnect_handler(struct pollfd pfd, int* online, Client* c, int client_index)
-{
-    close(pfd.fd);//close player socket
-    pfd.fd = -1;
+void handle_new_connections(Server *server, struct pollfd* pfd,  Client* clients, int pfd_n, int max_clients) {
+    for (;;) {
+        struct sockaddr_in client_addr;
+        socklen_t cli_addr_len = sizeof(client_addr);
 
-    (*online)--; //remove from active player count
+        int cfd = accept(server->server_fd,
+                         (struct sockaddr *)&client_addr,
+                         &cli_addr_len);
 
-    printf("Size of client c = %ld\n", sizeof(*c));
-    memset(c,0, sizeof(c)); //clear off player from list
+        if (cfd < 0) {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+                break;
+            perror("accept");
+            break;
+        }
+
+        if (server->online_players < server->max_players) {
+            int flags = fcntl(cfd, F_GETFL, 0);
+            fcntl(cfd, F_SETFL, flags | O_NONBLOCK);
+            add_client(pfd, clients, pfd_n, max_clients, cfd, &client_addr);
+            server->online_players++;
+        } else {
+            close(cfd);
+        }
+    }
+}
+
+
+void disconnect_handler(struct pollfd *pfd, int *online, Client *c, int client_index) {
+    close(pfd->fd);
+    pfd->fd = -1;
+    pfd->events = 0;
+    pfd->revents = 0;
+    c->pfd_index = -1;
+    (*online)--;
 }
