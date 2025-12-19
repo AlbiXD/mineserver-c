@@ -41,7 +41,7 @@ int packet_handler(Client *c)
     //Read once initially
     unsigned char *buf = c->packet_buf;
     int n = 0; 
-
+    printf("Here\n");
     printf("Extra = %d, n = %d\n", c->packet_len, n);
 
     n = read_packet(c, buf+c->packet_len, n-c->packet_len); 

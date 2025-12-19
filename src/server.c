@@ -81,6 +81,8 @@ void start_server(Server *server)
                 {
                     // int f = packet_dump(pfd[i].fd);//I just wanna see what they wrote
                     int status = 0;
+                    printf("Packet Recieved\n");
+                    // Split this into a function to handle player disconnect
                     if((status = packet_handler(&clients[i])) < 0){
                         //Handle Disconnect NEEDS REVISITING
                         close(pfd[p_index].fd);
@@ -101,10 +103,10 @@ void start_server(Server *server)
                 socklen_t cli_addr_len = sizeof(client_addr);
                 memset(&client_addr, 0, sizeof(client_addr));
 
-                int cfd = accept4(server->server_fd,
+                int cfd = accept(server->server_fd,
                                   (struct sockaddr *)&client_addr,
-                                  &cli_addr_len,
-                                  SOCK_NONBLOCK);
+                                  &cli_addr_len);
+
 
                 if (cfd < 0)
                 { // If no more clients in the kernel queue
@@ -116,6 +118,8 @@ void start_server(Server *server)
                 if (server->online_players < server->max_players)
                 { // If server is not full assign new player
                     printf("Accepted user!\n");
+                    int flags = fcntl(cfd, F_GETFL, 0);
+                    fcntl(cfd, F_SETFL, flags | O_NONBLOCK); // Makes it non blocking
                     add_client(pfd, clients, pfd_n, max_clients, cfd, &client_addr); // Adds client to client list and assigns client to pfd
                     (*online)++;
                 }
@@ -125,6 +129,7 @@ void start_server(Server *server)
                     close(cfd);
                 }
             }
+            printf("Here now\n");
             pfd[0].revents = 0;
         }
     }
