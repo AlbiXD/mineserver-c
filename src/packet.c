@@ -62,12 +62,12 @@ int packet_handler(Client *c)
     case 0x02:
         printf("Handshake Protocol!\n");
         handle_handshake(c, buf, n);
-        retval = 2;
+        retval = 0x02;
         break;
     case 0x01:
         printf("Login Protocol!\n");
         handle_login(c, buf);
-        retval = 1;
+        retval = 0x01;
         break;
     case 0x0D:
         handle_pos(c, buf);

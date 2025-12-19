@@ -83,10 +83,10 @@ void start_server(Server *server)
                     int status = 0;
                     printf("Packet Recieved\n");
                     // Split this into a function to handle player disconnect
-                    if((status = packet_handler(&clients[i])) < 0){
-                        //Handle Disconnect NEEDS REVISITING
-                        close(pfd[p_index].fd);
-                        pfd[p_index].fd = -1;
+                    if ((status = packet_handler(&clients[i])) < 0)
+                    {
+                        // Handle Disconnect NEEDS REVISITING
+                        disconnect_handler(pfd[p_index], online, clients, i);
                     }
                     printf("status = %d\n", status);
                     // printf("Client wrote %d bytes\n", f);
@@ -104,9 +104,8 @@ void start_server(Server *server)
                 memset(&client_addr, 0, sizeof(client_addr));
 
                 int cfd = accept(server->server_fd,
-                                  (struct sockaddr *)&client_addr,
-                                  &cli_addr_len);
-
+                                 (struct sockaddr *)&client_addr,
+                                 &cli_addr_len);
 
                 if (cfd < 0)
                 { // If no more clients in the kernel queue
@@ -119,7 +118,7 @@ void start_server(Server *server)
                 { // If server is not full assign new player
                     printf("Accepted user!\n");
                     int flags = fcntl(cfd, F_GETFL, 0);
-                    fcntl(cfd, F_SETFL, flags | O_NONBLOCK); // Makes it non blocking
+                    fcntl(cfd, F_SETFL, flags | O_NONBLOCK);                         // Makes it non blocking
                     add_client(pfd, clients, pfd_n, max_clients, cfd, &client_addr); // Adds client to client list and assigns client to pfd
                     (*online)++;
                 }
@@ -142,4 +141,15 @@ void server_stop(Server *server)
     close(server->server_fd);
     free(server);
     exit(1);
+}
+
+void disconnect_handler(struct pollfd pfd, int* online, Client* c, int client_index)
+{
+    close(pfd.fd);//close player socket
+    pfd.fd = -1;
+
+    (*online)--; //remove from active player count
+
+    printf("Size of client c = %ld\n", sizeof(*c));
+    memset(c,0, sizeof(c)); //clear off player from list
 }

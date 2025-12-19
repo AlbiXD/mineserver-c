@@ -30,6 +30,7 @@ typedef struct{
 
 Server * init_server(Config* cfg);
 
+void disconnect_handler(struct pollfd pfd, int* online, Client* c, int client_index);
 void start_server(Server *server);
 
 void server_stop(Server *server);
