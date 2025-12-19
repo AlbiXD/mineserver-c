@@ -17,6 +17,15 @@ Then you simply start the server by running
 ```
 ./server.out
 ```
+# Server Properties
+The server properties while still not at its final state has some relevant settings for the server
+```
+ip=localhost
+port=25565
+max-players=10
+```
+Here you can change the IP, port number, and the total number of players allowed on the server. 
+For now, I recommend keeping the max players between 10 and 50, since this server is currently single-threaded using pollfd (so it isn’t very fast!).
 
 # Resources
 Some websites I found useful!
