@@ -61,41 +61,47 @@ void start_server(Server *server)
 
     printf("Server is now online\n");
 
-    for (;;) //Main server loop
+    for (;;) // Main server loop
     {
         int p = poll(pfd, pfd_n, -1);
-
-        // Listen for incoming player packets
-        if (*online) // If no player is online why bother
-        {
-            for (int i = 0; i < max_clients; i++)
-            { // Handle client stuff
-                int p_index = clients[i].pfd_index;
-                if (p_index == -1)
-                    continue;
-
-                if (pfd[p_index].fd == -1)
-                    continue;
-
-                if (pfd[p_index].revents & POLLIN)
-                {
-                    int status = 0;
-                    printf("Packet Recieved\n");
-                    // Handle Disconnect NEEDS REVISITING
-                    if ((status = packet_handler(&clients[i])) < 0) disconnect_handler(&pfd[p_index], online, clients, i);
-                    printf("status = %d\n", status); //DEBUG: Status of packet
-                }
-            }
-        }
 
         // Listen for player connections
         if (pfd[0].revents & POLLIN)
         { // Player connection handle
             handle_new_connections(server, pfd, clients, pfd_n, max_clients);
         }
+
+        // Handle Client Events/I/O
+        if (*online) // If no player is online why bother
+        {
+            handle_client_events(pfd, clients, max_clients, online);
+        }
     }
 
     return;
+}
+
+void handle_client_events(struct pollfd *pfd, Client* clients, int max_clients, int* online)
+{
+    for (int i = 0; i < max_clients; i++)
+    { // Handle client stuff
+        int p_index = clients[i].pfd_index;
+        if (p_index == -1)
+            continue;
+
+        if (pfd[p_index].fd == -1)
+            continue;
+
+        if (pfd[p_index].revents & POLLIN)
+        {
+            int status = 0;
+            printf("Packet Recieved\n");
+            // Handle Disconnect NEEDS REVISITING
+            if ((status = packet_handler(&clients[i])) < 0)
+                disconnect_handler(&pfd[p_index], online, clients, i);
+            printf("status = %d\n", status); // DEBUG: Status of packet
+        }
+    }
 }
 
 void server_stop(Server *server)
@@ -105,8 +111,10 @@ void server_stop(Server *server)
     exit(1);
 }
 
-void handle_new_connections(Server *server, struct pollfd* pfd,  Client* clients, int pfd_n, int max_clients) {
-    for (;;) {
+void handle_new_connections(Server *server, struct pollfd *pfd, Client *clients, int pfd_n, int max_clients)
+{
+    for (;;)
+    {
         struct sockaddr_in client_addr;
         socklen_t cli_addr_len = sizeof(client_addr);
 
@@ -114,26 +122,30 @@ void handle_new_connections(Server *server, struct pollfd* pfd,  Client* clients
                          (struct sockaddr *)&client_addr,
                          &cli_addr_len);
 
-        if (cfd < 0) {
+        if (cfd < 0)
+        {
             if (errno == EAGAIN || errno == EWOULDBLOCK)
                 break;
             perror("accept");
             break;
         }
 
-        if (server->online_players < server->max_players) {
+        if (server->online_players < server->max_players)
+        {
             int flags = fcntl(cfd, F_GETFL, 0);
             fcntl(cfd, F_SETFL, flags | O_NONBLOCK);
             add_client(pfd, clients, pfd_n, max_clients, cfd, &client_addr);
             server->online_players++;
-        } else {
+        }
+        else
+        {
             close(cfd);
         }
     }
 }
 
-
-void disconnect_handler(struct pollfd *pfd, int *online, Client *c, int client_index) {
+void disconnect_handler(struct pollfd *pfd, int *online, Client *c, int client_index)
+{
     close(pfd->fd);
     pfd->fd = -1;
     pfd->events = 0;
