@@ -1,7 +1,6 @@
 #include "../include/packet.h"
 
-
-int read_packet(Client *c ,unsigned char *buf, int n)
+int read_packet(Client *c, unsigned char *buf, int n)
 {
     ssize_t total_read = n;
     ssize_t r = 0;
@@ -18,8 +17,10 @@ int read_packet(Client *c ,unsigned char *buf, int n)
         }
 
         // Person closed connection?
-        if (r == 0)
+        if (r == 0){
+            printf("Peer closed connection\n");
             break;
+        }
 
         if (r < 0)
         {
@@ -31,26 +32,29 @@ int read_packet(Client *c ,unsigned char *buf, int n)
         }
     }
 
-    if (r == 0) return -1; // client actually closed
+    if (r == 0)
+        return -1; // client actually closed
 
-        return total_read;
-    }
+    return total_read;
+}
 
 int packet_handler(Client *c)
 {
-    //Read once initially
+    // Read once initially
     unsigned char *buf = c->packet_buf;
-    int n = 0; 
-    // printf("Here\n");
-    // printf("Extra = %d, n = %d\n", c->packet_len, n);
+    int n = 0;
+    n = read_packet(c, buf + c->packet_len, c->packet_len);
 
-    n = read_packet(c, buf+c->packet_len, c->packet_len); 
+    // packet_dump(buf, n);
 
-    if(n == 0) return 0;
-    if(n == -1) return -1;
+    if( n > 0 ){
+        packet_dump(buf, n);
+    }
+    
+    if (n == -1)
+        return -1; // Client closed
 
-
-    //Get packetID
+    // Get packetID
     uint8_t packID = buf[0];
 
     //
@@ -60,29 +64,23 @@ int packet_handler(Client *c)
     switch (packID)
     {
     case 0x01:
-        printf("Login Protocol!\n");
         handle_login(c, buf);
         retval = 0x01;
         break;
     case 0x02:
-        printf("Handshake Protocol!\n");
         handle_handshake(c, buf, n);
         retval = 0x02;
         break;
     case 0x03:
-        printf("Chat Protocol!\n");
-        handle_chat(c,buf,n);   
+        handle_chat(c, buf, n);
         retval = 0x03;
-        break; 
+        break;
     case 0x0D:
         handle_pos(c, buf);
         retval = 0x0D;
         break;
     case 0xFF:
-    //TEMPORARY Testing perhaps add a disconnect handler here?
-        retval = 0;
-        printf("Disconnecting\n");
-        close(c->cfd);
+        retval = -1;
         break;
     default:
         retval = 0xFFF;
@@ -91,57 +89,55 @@ int packet_handler(Client *c)
 
     return retval;
 }
-int handle_chat(Client *c, unsigned char *buf, int n){
-    if(n < 3) n = read_packet(c, buf, n);
+int handle_chat(Client *c, unsigned char *buf, int n)
+{
+    if (n < 3)
+        n = read_packet(c, buf, n);
 
     uint8_t len = buf[2];
-    int size = 3 + len*2;
-        
-    while(n < size) n = read_packet(c, buf, n);
-    int extra = n-size;
+    int size = 3 + len * 2;
 
-    memmove(buf, buf+size, extra);
+    while (n < size)
+        n = read_packet(c, buf, n);
+    int extra = n - size;
+
+    memmove(buf, buf + size, extra);
     c->packet_len = extra;
 
+    printf("Size of text: %u, First byte of character %c\n", len, buf[1]);
 
-    printf("Size of text: %u\n", len);
-
-    printf("HELLO,WORLD\n");
     return 0;
 }
 int handle_handshake(Client *c, unsigned char *buf, int n)
 {
-    if(n < 3) n = read_packet(c, buf, n); //should have read an extra byte at least?
-   
-    //size of string
+    if (n < 3)
+        n = read_packet(c, buf, n); // should have read an extra byte at least?
+
+    // size of string
     uint8_t len = buf[2];
 
-    //packet_size
-    int size = 3 + len*2;
-    
-    //Read until we get the full packet
-    while(n < size) n = read_packet(c, buf, n);
+    // packet_size
+    int size = 3 + len * 2;
 
-    //We got full packet + potentially next extra byte
-    int extra = n-size;
+    // Read until we get the full packet
+    while (n < size)
+        n = read_packet(c, buf, n);
 
-    printf("Extra in handshake %d\n", extra);
+    // We got full packet + potentially next extra byte
+    int extra = n - size;
 
-    if(extra != 0){
-        memmove(buf, buf+size, extra);
+    if (extra != 0)
+    {
+        memmove(buf, buf + size, extra);
         c->packet_len = extra;
-    }  
-
+    }
 
     c->state = STATE_HANDSHAKE_START; // Handshake initiated
-
-
 
     unsigned char pkt_offline[] = {
         0x02,
         0x00, 0x01,
-        0x00, 0x2D
-    };
+        0x00, 0x2D};
 
     write(c->cfd, pkt_offline, 5);
     return 0;

@@ -27,6 +27,6 @@ int get_line(int fd, char* buf, int maxlen);
 
 int init_tables(struct pollfd* pfd, Client* clients, int pfd_n, int client_n);
 
-int packet_dump(int cfd);
+void packet_dump(unsigned char *buf, int n);
 
 #endif
