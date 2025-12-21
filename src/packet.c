@@ -41,10 +41,10 @@ int packet_handler(Client *c)
     //Read once initially
     unsigned char *buf = c->packet_buf;
     int n = 0; 
-    printf("Here\n");
-    printf("Extra = %d, n = %d\n", c->packet_len, n);
+    // printf("Here\n");
+    // printf("Extra = %d, n = %d\n", c->packet_len, n);
 
-    n = read_packet(c, buf+c->packet_len, n-c->packet_len); 
+    n = read_packet(c, buf+c->packet_len, c->packet_len); 
 
     if(n == 0) return 0;
     if(n == -1) return -1;
@@ -56,33 +56,59 @@ int packet_handler(Client *c)
     //
     int retval = 0;
 
-    printf("%d\n", packID);
+    // printf("%d\n", packID);
     switch (packID)
     {
-    case 0x02:
-        printf("Handshake Protocol!\n");
-        handle_handshake(c, buf, n);
-        retval = 0x02;
-        break;
     case 0x01:
         printf("Login Protocol!\n");
         handle_login(c, buf);
         retval = 0x01;
         break;
+    case 0x02:
+        printf("Handshake Protocol!\n");
+        handle_handshake(c, buf, n);
+        retval = 0x02;
+        break;
+    case 0x03:
+        printf("Chat Protocol!\n");
+        handle_chat(c,buf,n);   
+        retval = 0x03;
+        break; 
     case 0x0D:
         handle_pos(c, buf);
         retval = 0x0D;
         break;
+    case 0xFF:
+    //TEMPORARY Testing perhaps add a disconnect handler here?
+        retval = 0;
+        printf("Disconnecting\n");
+        close(c->cfd);
+        break;
     default:
-        printf("Unknown Packet\n");
         retval = 0xFFF;
         break;
     }
 
-    printf("Here\n");
     return retval;
 }
+int handle_chat(Client *c, unsigned char *buf, int n){
+    if(n < 3) n = read_packet(c, buf, n);
 
+    uint8_t len = buf[2];
+    int size = 3 + len*2;
+        
+    while(n < size) n = read_packet(c, buf, n);
+    int extra = n-size;
+
+    memmove(buf, buf+size, extra);
+    c->packet_len = extra;
+
+
+    printf("Size of text: %u\n", len);
+
+    printf("HELLO,WORLD\n");
+    return 0;
+}
 int handle_handshake(Client *c, unsigned char *buf, int n)
 {
     if(n < 3) n = read_packet(c, buf, n); //should have read an extra byte at least?
