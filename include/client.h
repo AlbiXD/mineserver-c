@@ -5,26 +5,18 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <stdio.h>
+
 #define BUFFSIZE 128
-typedef enum {
-    STATE_NONE,
-    STATE_HANDSHAKE_START,
-    STATE_HANDSHAKE_REPLY,
-    STATE_LOGIN_START,
-    STATE_LOGIN_SUCCESS,
-    STATE_SPAWN,
-    STATE_PLAYING,
-    STATE_DISCONNECTED
-} ClientState;
 
 typedef struct{    
     char usrname[16];
-    unsigned char packet_buf[BUFFSIZE];
+    unsigned char instream[BUFFSIZE];
+    unsigned char packet[BUFFSIZE];
+    unsigned char pidx;
+    int instream_len;
     int cfd;
-    int packet_len;
     int pfd_index;
     int client_index;
-    ClientState state;
     struct sockaddr_in client_addr;
 } Client;
 

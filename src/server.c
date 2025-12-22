@@ -153,7 +153,7 @@ void disconnect_handler(struct pollfd *pfd, int *online, Client *c, int client_i
     close(pfd->fd);
     printf("Client Descriptor Closed: %d\n", pfd->fd);
     pfd->fd = -1;
-    c->packet_len = 0;
+    c->instream_len = 0;
     pfd->events = 0;
     pfd->revents = 0;
     c->pfd_index = -1;

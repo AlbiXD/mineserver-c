@@ -17,7 +17,8 @@ int read_packet(Client *c, unsigned char *buf, int n)
         }
 
         // Person closed connection?
-        if (r == 0){
+        if (r == 0)
+        {
             printf("Peer closed connection\n");
             break;
         }
@@ -38,102 +39,127 @@ int read_packet(Client *c, unsigned char *buf, int n)
     return total_read;
 }
 
-int packet_handler(Client *c)
+/*
+    Return >0 → packet length (success, full packet found)
+    Return 0 → not enough data yet (keep reading)
+    Return <0 → error / invalid / disconnect
+*/
+int packet_assembler(Client *c, unsigned char *instream, unsigned char *packet_stream, int n)
 {
-    // Read once initially
-    unsigned char *buf = c->packet_buf;
-    int n = 0;
-    n = read_packet(c, buf + c->packet_len, c->packet_len);
+    // Index
+    if (n <= 0)
+        return 0;
 
-    // packet_dump(buf, n);
-
-    if( n > 0 ){
-        packet_dump(buf, n);
-    }
     
-    if (n == -1)
-        return -1; // Client closed
-
-    // Get packetID
-    uint8_t packID = buf[0];
-
-    //
+    unsigned char pid = instream[0];
     int retval = 0;
 
-    // printf("%d\n", packID);
-    switch (packID)
+    printf("PID: %02X\n", pid);
+    switch (pid)
     {
     case 0x01:
-        handle_login(c, buf);
-        retval = 0x01;
+    {
+        printf("Login Protocol\n");
+        if (n < 7)
+            return 0;
+        uint8_t length = instream[6];
+        int size = 16 + length * 2;
+        if (n < size)
+            return 0;
+        int extra = n - size;
+        memmove(packet_stream, instream, size);
+        memmove(instream, instream + size, extra);
+        c->instream_len = extra;
+        retval = size;
         break;
+    }
     case 0x02:
-        handle_handshake(c, buf, n);
-        retval = 0x02;
+    {
+        printf("Handshake Protocol\n");
+        if (n < 3)
+            return 0;
+
+        uint8_t length = instream[2];
+        int size = 3 + length * 2;
+
+        if (n < size)
+            return 0;
+
+        int extra = n - size;
+        memmove(packet_stream, instream, size);
+        memmove(instream, instream + size, extra);
+        c->instream_len = extra;
+        retval = size;
         break;
-    case 0x03:
-        handle_chat(c, buf, n);
-        retval = 0x03;
-        break;
+    }
     case 0x0D:
-        handle_pos(c, buf);
-        retval = 0x0D;
+        printf("Position Protocol\n");
+        if (n < 42)
+            return 0;
+
+        int extra = n - 42;
+        memmove(packet_stream, instream, 42);
+        memmove(instream, instream + 42, extra);
+        c->instream_len = extra;
+        retval = 42;
         break;
-    case 0xFF:
-        retval = -1;
-        break;
+
     default:
-        retval = 0xFFF;
+        retval = 0;
         break;
     }
 
     return retval;
 }
-int handle_chat(Client *c, unsigned char *buf, int n)
+
+int packet_handler(Client *c)
 {
-    if (n < 3)
-        n = read_packet(c, buf, n);
+    // Read once initially
+    unsigned char *instream = c->instream;
+    unsigned char *packet = c->packet;
 
-    uint8_t len = buf[2];
-    int size = 3 + len * 2;
+    int n = 0, r = 0;
 
-    while (n < size)
-        n = read_packet(c, buf, n);
-    int extra = n - size;
+    // Reads into instream
+    n = read_packet(c, instream, c->instream_len);
 
-    memmove(buf, buf + size, extra);
-    c->packet_len = extra;
+    if(n < 0) return -1;
+    // Sets the length of the instream to total bytes read
+    c->instream_len = n;
 
-    printf("Size of text: %u, First byte of character %c\n", len, buf[1]);
+    // Assemble the packet until packet is partial then read more
+    while ((r = packet_assembler(c, instream, packet, n)) > 0)
+    {
+        packet_dump(packet, r);
+        unsigned char pid = packet[0];
+        switch (pid)
+        {
+        case 0x01:
+            handle_login(c, packet);
+            break;
+        case 0x02:
+            handle_handshake(c, packet);
+            break;
+        case 0x0D:
+            handle_pos(c, packet);
+            break;
+        default:
+            break;
+        }
+        n = c->instream_len;
+    }
+    printf("R value = %d\n", r);
+
+    return r;
+}
+int handle_chat(Client *c, unsigned char *buf)
+{
+    // Displays the message
 
     return 0;
 }
-int handle_handshake(Client *c, unsigned char *buf, int n)
+int handle_handshake(Client *c, unsigned char *buf)
 {
-    if (n < 3)
-        n = read_packet(c, buf, n); // should have read an extra byte at least?
-
-    // size of string
-    uint8_t len = buf[2];
-
-    // packet_size
-    int size = 3 + len * 2;
-
-    // Read until we get the full packet
-    while (n < size)
-        n = read_packet(c, buf, n);
-
-    // We got full packet + potentially next extra byte
-    int extra = n - size;
-
-    if (extra != 0)
-    {
-        memmove(buf, buf + size, extra);
-        c->packet_len = extra;
-    }
-
-    c->state = STATE_HANDSHAKE_START; // Handshake initiated
-
     unsigned char pkt_offline[] = {
         0x02,
         0x00, 0x01,
@@ -142,10 +168,8 @@ int handle_handshake(Client *c, unsigned char *buf, int n)
     write(c->cfd, pkt_offline, 5);
     return 0;
 }
-
 int handle_login(Client *c, unsigned char *buf)
 {
-    c->state = STATE_LOGIN_START;
     unsigned char pkt_login[] = {
         0x01,
 
@@ -160,7 +184,6 @@ int handle_login(Client *c, unsigned char *buf)
 
     return 0;
 }
-
 int handle_pos(Client *c, unsigned char *buf)
 {
     unsigned char pkt_poslook[] = {
