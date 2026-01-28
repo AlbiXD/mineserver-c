@@ -14,6 +14,7 @@
 #include <poll.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <time.h>
 
 typedef struct{
     int server_fd;

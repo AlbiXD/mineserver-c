@@ -50,11 +50,10 @@ int packet_assembler(Client *c, unsigned char *instream, unsigned char *packet_s
     if (n <= 0)
         return 0;
 
-    
     unsigned char pid = instream[0];
     int retval = 0;
 
-    printf("PID: %02X\n", pid);
+    // printf("PID: %02X\n", pid);
     switch (pid)
     {
     case 0x01:
@@ -103,9 +102,12 @@ int packet_assembler(Client *c, unsigned char *instream, unsigned char *packet_s
         c->instream_len = extra;
         retval = 42;
         break;
+    case 0x03:{
 
+    }
     default:
         retval = 0;
+        c->instream_len = 0;
         break;
     }
 
@@ -123,14 +125,15 @@ int packet_handler(Client *c)
     // Reads into instream
     n = read_packet(c, instream, c->instream_len);
 
-    if(n < 0) return -1;
+    if (n < 0)
+        return -1;
     // Sets the length of the instream to total bytes read
     c->instream_len = n;
 
     // Assemble the packet until packet is partial then read more
     while ((r = packet_assembler(c, instream, packet, n)) > 0)
     {
-        packet_dump(packet, r);
+        // packet_dump(packet, r);
         unsigned char pid = packet[0];
         switch (pid)
         {
@@ -148,7 +151,8 @@ int packet_handler(Client *c)
         }
         n = c->instream_len;
     }
-    printf("R value = %d\n", r);
+
+    // printf("R is %d\n", r);
 
     return r;
 }

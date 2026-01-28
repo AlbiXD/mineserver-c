@@ -1,6 +1,10 @@
 #include "../include/server.h"
 #include "../include/cfg.h"
 
+/*
+    TODO: Packet Queue where every player packet gets worked on every 0.05s
+    Create a queue on heap and pass to each player packet?
+*/
 Server *init_server(Config *cfg)
 {
     Server *server = (Server *)malloc(sizeof(Server));
@@ -61,10 +65,16 @@ void start_server(Server *server)
 
     printf("Server is now online\n");
 
+    struct timespec last;
+    struct timespec now;
+
+    int elapsed_ms = 0;
+    int remaining = 50;
     for (;;) // Main server loop
     {
-        int p = poll(pfd, pfd_n, -1);
+        clock_gettime(CLOCK_MONOTONIC, &last);
 
+        int p = poll(pfd, pfd_n, remaining);
         // Listen for player connections
         if (pfd[0].revents & POLLIN)
         { // Player connection handle
@@ -75,6 +85,30 @@ void start_server(Server *server)
         if (*online) // If no player is online why bother
         {
             handle_client_events(pfd, clients, max_clients, online);
+        }
+
+        clock_gettime(CLOCK_MONOTONIC, &now);
+
+        long sec = now.tv_sec - last.tv_sec;
+        long nsec = now.tv_nsec - last.tv_nsec;
+
+        if (nsec < 0)
+        {
+            sec -= 1;
+            nsec += 1000000000L;
+        }
+
+        elapsed_ms = sec * 1000 + nsec / 1000000;
+
+        printf("Time: %ldms\n", elapsed_ms);
+
+        remaining = remaining - elapsed_ms; // How much time is left until next tick?
+
+        if (remaining <= 0)
+        {                     // if we have reached tick time
+            printf("TICK\n"); // print tick
+            int overdue = -remaining;
+            remaining = 50 - overdue;
         }
     }
 
@@ -96,8 +130,9 @@ void handle_client_events(struct pollfd *pfd, Client *clients, int max_clients, 
         {
             int status = 0;
             // Handle Disconnect NEEDS REVISITING
-            if ((status = packet_handler(&clients[i])) < 0){
-                printf("Packet Handled = %d\n", status);
+            if ((status = packet_handler(&clients[i])) < 0)
+            {
+                // printf("Packet Handled = %d\n", status);
                 disconnect_handler(&pfd[p_index], online, clients, i);
             }
         }
@@ -136,7 +171,7 @@ void handle_new_connections(Server *server, struct pollfd *pfd, Client *clients,
             fcntl(cfd, F_SETFL, flags | O_NONBLOCK);
             add_client(pfd, clients, pfd_n, max_clients, cfd, &client_addr);
             server->online_players++;
-            printf("Client Descriptor Created = %d\n", cfd);
+            // printf("Client Descriptor Created = %d\n", cfd);
         }
         else
         {

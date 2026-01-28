@@ -9,15 +9,15 @@
 #define BUFFSIZE 128
 
 typedef struct{    
-    char usrname[16];
-    unsigned char instream[BUFFSIZE];
-    unsigned char packet[BUFFSIZE];
-    unsigned char pidx;
-    int instream_len;
-    int cfd;
-    int pfd_index;
-    int client_index;
-    struct sockaddr_in client_addr;
+    char usrname[16]; // Minecraft username
+    unsigned char instream[BUFFSIZE]; // input stream (many packets)
+    unsigned char packet[BUFFSIZE]; // current packet
+    unsigned char pidx; // packet id
+    int instream_len; //input stream size
+    int cfd; // client socket descriptor
+    int pfd_index; // pollfd index
+    int client_index; // client index
+    struct sockaddr_in client_addr; // client's information such as address, port
 } Client;
 
 
