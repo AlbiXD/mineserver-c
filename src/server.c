@@ -100,15 +100,23 @@ void start_server(Server *server)
 
         elapsed_ms = sec * 1000 + nsec / 1000000;
 
-        printf("Time: %ldms\n", elapsed_ms);
+        // printf("Time: %ldms\n", elapsed_ms);
 
         remaining = remaining - elapsed_ms; // How much time is left until next tick?
 
-        if (remaining <= 0)
+        if (remaining <= 0) //TICK
         {                     // if we have reached tick time
-            printf("TICK\n"); // print tick
+            // printf("TICK\n"); // print tick
             int overdue = -remaining;
             remaining = 50 - overdue;
+
+            //Update the world
+            if(*online){
+                for(int i = 0; i < *online; i++){
+                    unsigned char buf = 0x00;
+                    write(clients[i].cfd, &buf, 1);
+                }
+            }
         }
     }
 
