@@ -104,15 +104,17 @@ void start_server(Server *server)
 
         remaining = remaining - elapsed_ms; // How much time is left until next tick?
 
-        if (remaining <= 0) //TICK
-        {                     // if we have reached tick time
+        if (remaining <= 0) // TICK
+        {                   // if we have reached tick time
             // printf("TICK\n"); // print tick
             int overdue = -remaining;
             remaining = 50 - overdue;
 
-            //Update the world
-            if(*online){
-                for(int i = 0; i < *online; i++){
+            // Update the world
+            if (*online)
+            {
+                for (int i = 0; i < *online; i++)
+                {
                     unsigned char buf = 0x00;
                     write(clients[i].cfd, &buf, 1);
                 }
@@ -173,18 +175,18 @@ void handle_new_connections(Server *server, struct pollfd *pfd, Client *clients,
             break;
         }
 
-        if (server->online_players < server->max_players)
-        {
-            int flags = fcntl(cfd, F_GETFL, 0);
-            fcntl(cfd, F_SETFL, flags | O_NONBLOCK);
-            add_client(pfd, clients, pfd_n, max_clients, cfd, &client_addr);
-            server->online_players++;
-            // printf("Client Descriptor Created = %d\n", cfd);
-        }
-        else
-        {
+        // Accept until
+
+        if (server->online_players >= server->max_players){
             close(cfd);
+            continue;
         }
+
+        int flags = fcntl(cfd, F_GETFL, 0);
+        fcntl(cfd, F_SETFL, flags | O_NONBLOCK);
+        add_client(pfd, clients, pfd_n, max_clients, cfd, &client_addr);
+        server->online_players++;
+        // printf("Client Descriptor Created = %d\n", cfd);
     }
 }
 
