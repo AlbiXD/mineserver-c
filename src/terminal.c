@@ -9,11 +9,14 @@
         Will return 1 if error with command
         Will return 0 if successful
 */
-
 int say_command(char *buffer, Server *server)
 {
     // <SERVER>: 
     short send_len = strlen(buffer)-1;
+    if(send_len <= 0){
+        printf("Bad usage: /say <text>\n");
+        return 1;
+    }
 
     printf("%d\n", send_len);
     int s = (send_len*2)+3;
