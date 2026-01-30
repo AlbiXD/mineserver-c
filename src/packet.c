@@ -102,8 +102,10 @@ int packet_assembler(Client *c, unsigned char *instream, unsigned char *packet_s
         c->instream_len = extra;
         retval = 42;
         break;
-    case 0x03:{
-
+    case 0xFF:
+    {
+        retval = -1;
+        break;
     }
     default:
         retval = 0;
@@ -151,8 +153,6 @@ int packet_handler(Client *c)
         }
         n = c->instream_len;
     }
-
-    // printf("R is %d\n", r);
 
     return r;
 }

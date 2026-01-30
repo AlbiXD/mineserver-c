@@ -7,7 +7,7 @@ int add_client(struct pollfd *pfd, Client *client, int pfd_n, int client_n, int 
             
             client->pfd_index = i;
             pfd[i].fd = cfd;
-            pfd[i].events = POLLIN;
+            pfd[i].events = POLLIN |POLLIN | POLLHUP | POLLERR | POLLNVAL;
             break;
         }
     for (int i = 0; i < client_n; i++)

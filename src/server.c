@@ -47,7 +47,7 @@ void start_server(Server *server)
     int *online = &server->online_players;
 
     struct pollfd pfd[pfd_n];
-    Client clients[max_clients];
+    Client *clients = (Client *)malloc(sizeof(Client) * max_clients);
     server->clients = clients;
 
     init_tables(pfd, clients, pfd_n, max_clients); // Initialize tables
@@ -56,7 +56,7 @@ void start_server(Server *server)
     pfd[0].events = POLLIN;
 
     // Set pfd for terminal input
-    pfd[1].fd = 0; 
+    pfd[1].fd = 0;
     pfd[1].events = POLLIN;
 
     printf("Starting Server on IP: %s:%d\n", server->cfg->host, server->port);
@@ -82,16 +82,16 @@ void start_server(Server *server)
     {
         clock_gettime(CLOCK_MONOTONIC, &last);
 
-        int p = poll(pfd, pfd_n, remaining);
+        poll(pfd, pfd_n, remaining);
         // Listen for player connections
         if (pfd[0].revents & POLLIN)
         { // Player connection handle
             handle_new_connections(server, pfd, clients, pfd_n, max_clients);
         }
 
-
         // Handle terminal input
-        if(pfd[1].revents & POLLIN){
+        if (pfd[1].revents & POLLIN)
+        {
             handle_terminal_event(server);
         }
 
@@ -139,8 +139,6 @@ void start_server(Server *server)
     return;
 }
 
-
-
 void handle_client_events(struct pollfd *pfd, Client *clients, int max_clients, int *online)
 {
     for (int i = 0; i < max_clients; i++)
@@ -152,26 +150,31 @@ void handle_client_events(struct pollfd *pfd, Client *clients, int max_clients, 
         if (pfd[p_index].fd == -1)
             continue;
 
+        if (pfd[p_index].revents & (POLLHUP | POLLERR | POLLNVAL))
+            disconnect_handler(&pfd[p_index], online, clients, i); //Handles disconnect incase of crash
         if (pfd[p_index].revents & POLLIN)
         {
             int status = 0;
             // Handle Disconnect NEEDS REVISITING
             if ((status = packet_handler(&clients[i])) < 0)
             {
-                // printf("Packet Handled = %d\n", status);
+
+                printf("Packet Handled = %d\n", status);
                 disconnect_handler(&pfd[p_index], online, clients, i);
             }
         }
     }
 }
 
-
-void send_packet(unsigned char* buffer, Server* server, int packet_len){
-    for(int i = 0; i < server->online_players; i++){
+void send_packet(unsigned char *buffer, Server *server, int packet_len)
+{
+    for (int i = 0; i < server->max_players; i++)
+    {
         int cfd = server->clients[i].cfd;
-        if(cfd != -1){
-            write(cfd, buffer, packet_len);
-        }
+        if (cfd == -1)
+            continue;
+
+        write(cfd, buffer, packet_len);
     }
     return;
 }
@@ -223,12 +226,11 @@ void disconnect_handler(struct pollfd *pfd, int *online, Client *c, int client_i
     /*
     Oddly enough when a client disconnects, this runs a bit delayed but when put in packet handler it disconnects and connects just fine
     */
-    close(pfd->fd);
-    printf("Client Descriptor Closed: %d\n", pfd->fd);
+    printf("Client Descriptor Closed: %d\n", c[client_index].cfd);
+    close(c[client_index].cfd);
+    memset(&c[client_index], 0, sizeof(Client));
+    c[client_index].cfd = -1;
     pfd->fd = -1;
-    c->instream_len = 0;
-    pfd->events = 0;
-    pfd->revents = 0;
     c->pfd_index = -1;
     (*online)--;
 }
