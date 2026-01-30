@@ -1,9 +1,12 @@
 #include "../include/server.h"
-#include "../include/cfg.h"
+#include "../include/terminal.h"
+#include "../include/packet.h"
 
 /*
     TODO: Packet Queue where every player packet gets worked on every 0.05s
     Create a queue on heap and pass to each player packet?
+
+    TODO: Terminal thread must ensure
 */
 Server *init_server(Config *cfg)
 {
@@ -39,17 +42,22 @@ Server *init_server(Config *cfg)
 
 void start_server(Server *server)
 {
-    int pfd_n = server->max_players + 1;
+    int pfd_n = server->max_players + 2;
     int max_clients = server->max_players;
     int *online = &server->online_players;
 
     struct pollfd pfd[pfd_n];
     Client clients[max_clients];
+    server->clients = clients;
 
     init_tables(pfd, clients, pfd_n, max_clients); // Initialize tables
 
     pfd[0].fd = server->server_fd;
     pfd[0].events = POLLIN;
+
+    // Set pfd for terminal input
+    pfd[1].fd = 0; 
+    pfd[1].events = POLLIN;
 
     printf("Starting Server on IP: %s:%d\n", server->cfg->host, server->port);
     if (bind(server->server_fd, (struct sockaddr *)&server->server_addr, sizeof(server->server_addr)) < 0)
@@ -79,6 +87,12 @@ void start_server(Server *server)
         if (pfd[0].revents & POLLIN)
         { // Player connection handle
             handle_new_connections(server, pfd, clients, pfd_n, max_clients);
+        }
+
+
+        // Handle terminal input
+        if(pfd[1].revents & POLLIN){
+            handle_terminal_event(server);
         }
 
         // Handle Client Events/I/O
@@ -125,6 +139,8 @@ void start_server(Server *server)
     return;
 }
 
+
+
 void handle_client_events(struct pollfd *pfd, Client *clients, int max_clients, int *online)
 {
     for (int i = 0; i < max_clients; i++)
@@ -147,6 +163,17 @@ void handle_client_events(struct pollfd *pfd, Client *clients, int max_clients, 
             }
         }
     }
+}
+
+
+void send_packet(unsigned char* buffer, Server* server, int packet_len){
+    for(int i = 0; i < server->online_players; i++){
+        int cfd = server->clients[i].cfd;
+        if(cfd != -1){
+            write(cfd, buffer, packet_len);
+        }
+    }
+    return;
 }
 
 void server_stop(Server *server)
@@ -177,7 +204,8 @@ void handle_new_connections(Server *server, struct pollfd *pfd, Client *clients,
 
         // Accept until
 
-        if (server->online_players >= server->max_players){
+        if (server->online_players >= server->max_players)
+        {
             close(cfd);
             continue;
         }

@@ -2,7 +2,7 @@
 #include "../include/util.h"
 
 int add_client(struct pollfd *pfd, Client *client, int pfd_n, int client_n, int cfd, struct sockaddr_in* client_addr){
-    for (int i = 1; i < pfd_n; i++)
+    for (int i = 2; i < pfd_n; i++)
         if (pfd[i].fd == -1){
             
             client->pfd_index = i;

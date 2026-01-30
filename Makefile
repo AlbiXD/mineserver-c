@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall -Wextra -g -O3
 OUTPUT = server.out
 
-OBJ = build/util.o build/cfg.o build/main.o build/server.o build/client.o build/packet.o
+OBJ = build/util.o build/cfg.o build/main.o build/server.o build/client.o build/packet.o build/terminal.o
 
 server: $(OBJ)
 	$(CC) $(CFLAGS) $(OBJ) -o $(OUTPUT)
