@@ -15,5 +15,5 @@ typedef struct{
 
 void init_default_config(config *cfg);
 void init_config(config *cfg);
-
+void parse_config(config *cfg);
 #endif

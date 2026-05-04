@@ -1,27 +1,58 @@
 #include "./includes/config.h"
 #include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <netinet/in.h>
 
+void init_default_config(config *cfg)
+{
+    printf("Config not found, generating new config...\n");
+    FILE *file;
+    file = fopen("server.properties", "w");
+    fprintf(file, "ip=localhost\n");
+    fprintf(file, "port=25565\n");
 
-
-void init_default_config(config * cfg){
-    printf("Config not found, generating new config...");
     return;
 }
 
-void init_config(config *cfg){
+void parse_config(config *cfg)
+{
+    FILE *f = fopen("server.properties", "r");
+    char buffer[256];
 
-    //Check if config exists
-    //if file exists
-    if(access("server.properties", F_OK) == 0){
+    while (fgets(buffer, 256, f))
+    {
+        char *token = strtok(buffer, "=");
+        char *value = strtok(NULL, "=");
+
+        if (strcmp(token, "ip") == 0)
+        {
+            strcpy(cfg->ip_address, value);
+        }
+        else if (strcmp(token, "port") == 0)
+        {
+            cfg->PORT = (in_port_t)atoi(value);
+        }
+    }
+}
+
+void init_config(config *cfg)
+{
+
+    // Check if config exists
+    // if file exists
+    if (access("server.properties", F_OK) != 0)
+    {
         init_default_config(cfg);
         return;
     }
 
-    //If config exists parse
+    // If config exists parse
+    printf("Config found parsing...\n");
 
-    //If it does not create default config
-
+    // If it does not create default config
+    parse_config(cfg);
 
     return;
 }
