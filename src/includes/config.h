@@ -13,7 +13,7 @@ typedef struct{
 
 
 
-config init_default_config(config *cfg);
-config* init_config(config *cfg);
+void init_default_config(config *cfg);
+void init_config(config *cfg);
 
 #endif

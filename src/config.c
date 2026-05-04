@@ -1,18 +1,19 @@
-#include "config.h"
+#include "./includes/config.h"
 #include <unistd.h>
+#include <stdio.h>
 
 
 
-
-config init_default_config(config * cfg){
-
+void init_default_config(config * cfg){
+    printf("Config not found, generating new config...");
+    return;
 }
 
 void init_config(config *cfg){
+
     //Check if config exists
     //if file exists
-
-    if(access(".", F_OK) == 0){
+    if(access("server.properties", F_OK) == 0){
         init_default_config(cfg);
         return;
     }
