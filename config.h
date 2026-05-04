@@ -1,0 +1,19 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
+#include <netinet/in.h>
+
+
+typedef struct{
+
+    char        ip_address[16];    //IP Address
+    in_port_t   PORT;              //Server Port
+
+} config;
+
+
+
+config init_default_config(config *cfg);
+config* init_config(config *cfg);
+
+#endif
