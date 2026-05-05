@@ -18,7 +18,7 @@ int init_server(server *srv, const config *cfg)
     // Construct the IP
     memset(addr_in, 0, sizeof(*addr_in));
 
-    addr_in->sin_family = AF_INET; // Set Family
+    addr_in->sin_family = AF_INET;        // Set Family
     addr_in->sin_port = htons(cfg->PORT); // Set Port
 
     if (strcmp(cfg->ip_address, "localhost") == 0)

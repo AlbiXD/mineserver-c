@@ -14,5 +14,7 @@ int main()
     if (init_server(&srv, &cfg) < 0)
         return -1;
 
+
+    //Destroy server
     return 0;
 }
