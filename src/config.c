@@ -70,5 +70,6 @@ void init_config(config *cfg)
 
 
     printf("Config successfully parsed!\n");
+
     return;
 }

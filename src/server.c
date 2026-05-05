@@ -11,22 +11,20 @@ int init_server(server *srv, const config *cfg)
 
     int sfd;
     struct sockaddr *addr = (struct sockaddr *)&srv->server_addr;
+    struct sockaddr_in *addr_in = &srv->server_addr;
 
     printf("SERVER: Initializing server...\n");
 
     // Construct the IP
-    memset(&srv->server_addr, 0, sizeof(srv->server_addr));
+    memset(addr_in, 0, sizeof(*addr_in));
 
-    srv->server_addr.sin_family = AF_INET; // Set Family
-
-    srv->server_addr.sin_port = htons(cfg->PORT); // Set Port
+    addr_in->sin_family = AF_INET; // Set Family
+    addr_in->sin_port = htons(cfg->PORT); // Set Port
 
     if (strcmp(cfg->ip_address, "localhost") == 0)
-
-        srv->server_addr.sin_addr.s_addr = INADDR_ANY;
-     else
-        srv->server_addr.sin_addr.s_addr = inet_addr(cfg->ip_address);
-
+        addr_in->sin_addr.s_addr = INADDR_ANY;
+    else
+        addr_in->sin_addr.s_addr = inet_addr(cfg->ip_address);
 
     printf("SERVER: Starting on IP %s\n", cfg->ip_address);
     printf("SERVER: Running on PORT %hu\n", cfg->PORT);
