@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #define CONFIG_OPTIONS 2
+#define LINE_BUFFER 128
 typedef struct{
 
     char        ip_address[16];    //IP Address

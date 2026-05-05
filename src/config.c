@@ -19,15 +19,19 @@ void parse_config(config *cfg)
 {
     FILE *f = fopen("server.properties", "r");
     char buffer[256];
-    cfg->is_valid=0;
+    cfg->is_valid = 0;
 
-    while (fgets(buffer, 256, f))
+    while (fgets(buffer, LINE_BUFFER, f))
     {
         char *token = strtok(buffer, "=");
         char *value = strtok(NULL, "=");
 
         if (strcmp(token, "ip") == 0)
         {
+            for (int i = 0; i < LINE_BUFFER; i++)
+                if (buffer[i] == '\n')
+                    buffer[i] = 0;
+
             strcpy(cfg->ip_address, value);
             cfg->is_valid++;
         }
@@ -38,7 +42,8 @@ void parse_config(config *cfg)
         }
     }
 
-    if(cfg->is_valid < CONFIG_OPTIONS){
+    if (cfg->is_valid < CONFIG_OPTIONS)
+    {
         printf("Config is missing fields regenerating from default...\n");
         return init_default_config(cfg);
     }

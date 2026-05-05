@@ -8,13 +8,16 @@ all: server
 $(BUILD):
 	mkdir -p $(BUILD)
 
-server: config.o main.o
-	$(CC) $(BUILD)/config.o $(BUILD)/main.o -o $@
+server: config.o main.o server.o
+	$(CC) $(BUILD)/server.o $(BUILD)/config.o $(BUILD)/main.o -o $@
 
 main.o: $(SRC)/main.c $(BUILD)
 	$(CC) $(OPTIONS) $< -o $(BUILD)/$@
 
 config.o: $(SRC)/config.c $(BUILD)
+	$(CC) $(OPTIONS) $< -o $(BUILD)/$@ 
+
+server.o: $(SRC)/server.c $(BUILD)
 	$(CC) $(OPTIONS) $< -o $(BUILD)/$@ 
 
 
