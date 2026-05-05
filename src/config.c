@@ -68,5 +68,7 @@ void init_config(config *cfg)
     // If it does not create default config
     parse_config(cfg);
 
+
+    printf("Config successfully parsed!\n");
     return;
 }
