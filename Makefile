@@ -3,7 +3,7 @@ CFLAGS = -Wall -Wextra -O2
 BUILD = build
 SRC = src
 
-OBJS = $(BUILD)/main.o $(BUILD)/config.o $(BUILD)/server.o
+OBJS = $(BUILD)/main.o $(BUILD)/config.o $(BUILD)/server.o $(BUILD)/client.o
 
 all: server
 

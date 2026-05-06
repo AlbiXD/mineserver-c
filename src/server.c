@@ -6,11 +6,24 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 int init_server(server *srv, const config *cfg)
 {
 
     int sfd;
+
+    srv->clients = malloc(sizeof(client) * cfg->max_players);
+    if (!srv->clients)
+    {
+        perror("malloc");
+        return -1;
+    }
+
+    srv->max_players = cfg->max_players;
+
+    init_client_list(srv->clients, cfg->max_players);
+
     struct sockaddr *addr = (struct sockaddr *)&srv->server_addr;
     struct sockaddr_in *addr_in = &srv->server_addr;
     srv->cfg = cfg;
@@ -60,24 +73,40 @@ int init_server(server *srv, const config *cfg)
 int start_server(server *srv)
 {
 
+    client *clients = srv->clients;
+
     printf("SERVER: Server is now online and ready to accept clients\n");
-    
-    
+
     struct sockaddr_in client_address;
-    size_t client_addrlen = sizeof(client_address);
+    socklen_t client_addrlen = sizeof(client_address);
     memset(&client_address, 0, client_addrlen);
 
     int client_fd;
 
-    while (1){
-        client_fd = accept(srv->server_fd, (struct sockaddr *)&client_address, (socklen_t *) &client_addrlen);
+    int max_players = srv->max_players;
+    while (1)
+    {
+
+        client_fd = accept(srv->server_fd, (struct sockaddr *)&client_address, &client_addrlen);
+        if (client_fd < 0)
+        {
+            perror("accept");
+            continue;
+        }
         fcntl(client_fd, F_SETFL, O_NONBLOCK);
+
+        // terminate gracefully?
+        if (handle_client_connection(client_fd, max_players) < 0)
+            reject_client(client_fd);
     }
 
     return 0;
 }
 
-void stop_server(server *srv){
+void stop_server(server *srv)
+{
+
+    // Need to free and close clients
     close(srv->server_fd); // Close Server
     return;
 }

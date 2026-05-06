@@ -11,8 +11,8 @@
 typedef struct {
     int server_fd;          // listening socket
     struct sockaddr_in server_addr;
-
     client *clients;
+    int max_players;
 
     const config *cfg;
 } server;

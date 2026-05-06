@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include "./includes/config.h"
 #include "./includes/server.h"
+#include "./includes/client.h"
+
 
 int main()
 {
