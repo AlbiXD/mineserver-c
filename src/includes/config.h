@@ -1,16 +1,16 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include <netinet/in.h>
 #include <stdint.h>
+#include <netinet/in.h>
 
-#define CONFIG_OPTIONS 2
+#define CONFIG_OPTIONS 3
 #define LINE_BUFFER 128
 typedef struct{
 
     char        ip_address[16];    //IP Address
-    in_port_t   PORT;              //Server Port
-
+    in_port_t   port;              //Server Port
+    int max_players;
 
     uint8_t is_valid; 
 
