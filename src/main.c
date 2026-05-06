@@ -15,6 +15,11 @@ int main()
         return -1;
 
 
+    start_server(&srv);
+
+
+    stop_server(&srv);
+
     //Destroy server
     return 0;
 }

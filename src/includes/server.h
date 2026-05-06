@@ -3,11 +3,18 @@
 
 #include "config.h"
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include "client.h"
+
 #define BACKLOG 128
 
 typedef struct {
     int server_fd;          // listening socket
     struct sockaddr_in server_addr;
+
+    client *clients;
+
+    const config *cfg;
 } server;
 
 /*
