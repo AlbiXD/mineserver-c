@@ -11,24 +11,23 @@
 #include <errno.h>
 #include "./includes/client.h"
 
-
 int init_server(server *srv, const config *cfg)
 {
 
     int sfd;
     srv->cfg = cfg;
     srv->max_players = cfg->max_players;
-    srv->clients = malloc(sizeof(client) * cfg->max_players);    // Initialize the client list
-
+    srv->clients = malloc(sizeof(client) * cfg->max_players); // Initialize the client list
     if (!srv->clients)
     {
         perror("malloc");
         return -1;
     }
 
-    init_client_list(srv);
 
-    //Server address
+    init_client_list(srv); // Initializes the client list + pollfd list
+
+    // Server address
     struct sockaddr *addr = (struct sockaddr *)&srv->server_addr;
     struct sockaddr_in *addr_in = &srv->server_addr;
     printf("SERVER: Initializing server...\n");
@@ -45,7 +44,6 @@ int init_server(server *srv, const config *cfg)
     // Create socket
     srv->server_fd = socket(AF_INET, SOCK_STREAM, 0);
     sfd = srv->server_fd;
-
 
     // Make socket non blocking
     fcntl(sfd, F_SETFL, O_NONBLOCK);
@@ -75,25 +73,24 @@ int start_server(server *srv)
 {
 
     printf("SERVER: Server is now online and ready to accept clients\n");
-    int n_pfd = srv->max_players + 1; //number of pollfd
-    struct pollfd pfd[n_pfd]; //Construct pollfd
-    srv->pfd_list = pfd;
+    int n_pfd = srv->max_players + 1; // number of pollfd
+    srv->pfd_list = malloc(sizeof(struct pollfd) * n_pfd);
+    struct pollfd *pfd = srv->pfd_list;
 
-    //Listening socket / server socket poll
+    // Listening socket / server socket poll
     pfd[0].fd = srv->server_fd;
     pfd[0].events = POLLIN;
     pfd[0].revents = 0;
 
-    for(;;) //Main server loop
+    for (;;) // Main server loop
     {
-        int num_polls = poll(pfd, n_pfd, -1);
+        poll(pfd, n_pfd, -1);
 
-
-        //client connection
+        // client connection
         if (pfd[0].revents & POLLIN)
             handle_client_connect(srv);
 
-        //handle_client_events()
+        // handle_client_events()
     }
 
     return 0;
@@ -102,7 +99,11 @@ int start_server(server *srv)
 void stop_server(server *srv)
 {
 
+    printf("SERVER: Shutting down server...\n");
     // Need to free and close clients
+    close_all_clients(srv);
     close(srv->server_fd); // Close Server
+    free(srv->pfd_list);
+    free(srv->clients);
     return;
 }

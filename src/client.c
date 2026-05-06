@@ -43,6 +43,18 @@ void reject_client(int client_fd)
     close(client_fd);
 }
 
+void close_all_clients(server *srv)
+{
+    for (int i = 0; i < srv->max_players; i++)
+    {
+        if (srv->clients[i].is_used)
+        {
+            close(srv->clients[i].client_fd);
+            srv->clients[i].is_used = 0;
+        }
+    }
+}
+
 int handle_client_connect(server *srv)
 {
     struct sockaddr_in client_address;

@@ -18,6 +18,11 @@ typedef struct client {
 } client;
 
 /*
+ * Close all connected clients and mark their slots as unused.
+ */
+void close_all_clients(server *srv);
+
+/*
  * Initialize an array of `max_players` client slots, marking each as unused.
  * Must be called once after allocating the array, before any other client
  * operations are performed.
