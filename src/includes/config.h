@@ -3,6 +3,10 @@
 
 #include <stdint.h>
 #include <netinet/in.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define CONFIG_OPTIONS 3
 #define LINE_BUFFER 128

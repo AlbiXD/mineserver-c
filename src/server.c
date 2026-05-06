@@ -1,15 +1,7 @@
 #include "includes/server.h"
 #include "includes/config.h"
-#include <sys/socket.h>
-#include <string.h>
-#include <arpa/inet.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <sys/poll.h>
-#include <errno.h>
 #include "./includes/client.h"
+#include "./includes/events.h"
 
 int init_server(server *srv, const config *cfg)
 {
@@ -24,6 +16,7 @@ int init_server(server *srv, const config *cfg)
         return -1;
     }
 
+    srv->pfd_list = malloc(sizeof(struct pollfd) * srv->max_players + 1); // Initialize the pollfd list
 
     init_client_list(srv); // Initializes the client list + pollfd list
 
@@ -74,7 +67,6 @@ int start_server(server *srv)
 
     printf("SERVER: Server is now online and ready to accept clients\n");
     int n_pfd = srv->max_players + 1; // number of pollfd
-    srv->pfd_list = malloc(sizeof(struct pollfd) * n_pfd);
     struct pollfd *pfd = srv->pfd_list;
 
     // Listening socket / server socket poll
@@ -90,8 +82,16 @@ int start_server(server *srv)
         if (pfd[0].revents & POLLIN)
             handle_client_connect(srv);
 
-        // handle_client_events()
+        // client I/O events n_pfd is 11
+        //0-10 0 is server socket, 1-10 are clients
+        for(int i = 1; i < n_pfd; i++){
+            if(pfd[i].revents & POLLIN){
+                // Handle client data
+                printf("SERVER: Received data from client on fd %d\n", pfd[i].fd);
+            }
+        }
     }
+    
 
     return 0;
 }

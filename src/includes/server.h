@@ -3,7 +3,14 @@
 #include "config.h"
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <poll.h>
+#include <string.h>
+#include <arpa/inet.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <sys/poll.h>
+#include <errno.h>
 
 #define BACKLOG 128
 

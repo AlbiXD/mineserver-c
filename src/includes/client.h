@@ -3,6 +3,9 @@
 #include <netinet/in.h>
 #include <errno.h>
 #include <sys/socket.h>
+#include <string.h>
+#include <stdio.h>
+#include <unistd.h>
 
 typedef struct server server;
 
@@ -34,13 +37,6 @@ void init_client_list(server *srv);
  * corresponding slot as unused (is_used = 0).
  */
 void close_client(int client_fd);
-
-/*
- * Handle I/O for a single connected client. Called after a successful accept()
- * once the client has been placed into a slot.
- * Returns 0 on normal completion, -1 on error.
- */
-int handle_client_connect(server *srv);
 
 /*
  * Find the first unused slot in the clients array.

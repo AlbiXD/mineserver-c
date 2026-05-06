@@ -1,9 +1,5 @@
 #include "./includes/config.h"
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <netinet/in.h>
+
 
 void init_default_config(config *cfg)
 {
