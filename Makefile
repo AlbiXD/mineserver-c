@@ -1,26 +1,22 @@
-CC=gcc
-OPTIONS= -c
-BUILD=build
-SRC=src
+CC = gcc
+CFLAGS = -Wall -Wextra -O2
+BUILD = build
+SRC = src
+
+OBJS = $(BUILD)/main.o $(BUILD)/config.o $(BUILD)/server.o
 
 all: server
+
+server: $(OBJS)
+	$(CC) $(OBJS) -o $@
+
+$(BUILD)/%.o: $(SRC)/%.c | $(BUILD)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILD):
 	mkdir -p $(BUILD)
 
-server: config.o main.o server.o
-	$(CC) $(BUILD)/server.o $(BUILD)/config.o $(BUILD)/main.o -o $@
-
-main.o: $(SRC)/main.c $(BUILD)
-	$(CC) $(OPTIONS) $< -o $(BUILD)/$@
-
-config.o: $(SRC)/config.c $(BUILD)
-	$(CC) $(OPTIONS) $< -o $(BUILD)/$@ 
-
-server.o: $(SRC)/server.c $(BUILD)
-	$(CC) $(OPTIONS) $< -o $(BUILD)/$@ 
-
-
-
 clean:
-	rm -rf server build
+	rm -rf server $(BUILD)
+
+.PHONY: all clean
