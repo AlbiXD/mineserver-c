@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <sys/poll.h>
 #include <errno.h>
+#include "./includes/client.h"
+
 
 int init_server(server *srv, const config *cfg)
 {
@@ -39,12 +41,10 @@ int init_server(server *srv, const config *cfg)
     else
         addr_in->sin_addr.s_addr = inet_addr(cfg->ip_address);
 
-    printf("SERVER: Starting on IP %s\n", cfg->ip_address);
-    printf("SERVER: Running on PORT %hu\n", cfg->port);
-
     // Create socket
     srv->server_fd = socket(AF_INET, SOCK_STREAM, 0);
     sfd = srv->server_fd;
+
 
     // Make socket non blocking
     fcntl(sfd, F_SETFL, O_NONBLOCK);
@@ -62,6 +62,8 @@ int init_server(server *srv, const config *cfg)
         perror("SERVER");
         return -1;
     }
+    printf("SERVER: Starting on IP %s\n", cfg->ip_address);
+    printf("SERVER: Running on PORT %hu\n", cfg->port);
 
     printf("SERVER: Server initialized!\n");
 
@@ -71,19 +73,12 @@ int init_server(server *srv, const config *cfg)
 int start_server(server *srv)
 {
 
-    client *clients = srv->clients;
-
     printf("SERVER: Server is now online and ready to accept clients\n");
-
-    struct sockaddr_in client_address;
-    socklen_t client_addrlen = sizeof(client_address);
-    memset(&client_address, 0, client_addrlen);
-
-    int client_fd;
-    int max_players = srv->max_players;
-    int n_pfd = max_players + 1;
+    int n_pfd = srv->max_players + 1;
 
     struct pollfd pfd[n_pfd];
+
+    srv->pfd_list = pfd;
 
     pfd[0].fd = srv->server_fd;
     pfd[0].events = POLLIN;
@@ -94,8 +89,11 @@ int start_server(server *srv)
 
         poll(pfd, n_pfd, -1);
 
-        if (pfd[0].revents & POLLIN){
-        }
+
+        //client connection
+        if (pfd[0].revents & POLLIN)
+            handle_client_connect(srv);
+
     }
 
     return 0;

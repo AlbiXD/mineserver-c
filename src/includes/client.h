@@ -1,17 +1,20 @@
 #ifndef CLIENT_H
 #define CLIENT_H
-
 #include <netinet/in.h>
 #include <errno.h>
-#include "server.h"
+#include <sys/socket.h>
+
+typedef struct server server;
+
 /*
  * Represents a single connected client. is_used is 0 for empty slots, non-zero for active ones.
  */
-typedef struct
-{
+typedef struct client {
     int client_fd;                  /* socket file descriptor; meaningful only when is_used != 0 */
     struct sockaddr_in client_addr; /* peer address, filled in by accept() */
     int is_used;                    /* 0 = slot is empty, 1 = slot holds an active client */
+    int pfd_idx;                    /* index into the server's pfd_list array */
+    int idx;                        /* index into the server's clients array */
 } client;
 
 /*
@@ -19,7 +22,7 @@ typedef struct
  * Must be called once after allocating the array, before any other client
  * operations are performed.
  */
-void init_client_list(client *ptr, int max_players);
+void init_client_list(server *srv);
 
 /*
  * Close a client's socket. Caller is responsible for also marking the
@@ -40,8 +43,12 @@ int handle_client_connect(server *srv);
  */
 int check_for_open_slots(client *clients, int max_players);
 
-
-
+/*
+ * Place an accepted client into slot `idx` of the server's clients array,
+ * and register its socket in the corresponding pollfd slot for POLLIN.
+ * Caller must ensure `idx` refers to an unused slot (see check_for_open_slots).
+ */
+void add_client(server *srv, int client_fd, struct sockaddr_in client_address, int idx);
 
 /*
  * Reject a client connection that could not be admitted to the server.
