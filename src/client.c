@@ -64,7 +64,7 @@ int handle_client_connect(server *srv)
         printf("Client connected\n");
         int idx = check_for_open_slots(srv->clients, srv->max_players);
 
-        // Terminate gracefully
+        // Terminate gracefully if no slots are open
         if (idx < 0)
         {
             reject_client(client_fd);
