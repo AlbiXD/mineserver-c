@@ -7,35 +7,33 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <sys/poll.h>
+#include <errno.h>
 
 int init_server(server *srv, const config *cfg)
 {
 
     int sfd;
+    srv->cfg = cfg;
 
+    // Initialize the client list
     srv->clients = malloc(sizeof(client) * cfg->max_players);
     if (!srv->clients)
     {
         perror("malloc");
         return -1;
     }
-
     srv->max_players = cfg->max_players;
-
     init_client_list(srv->clients, cfg->max_players);
 
     struct sockaddr *addr = (struct sockaddr *)&srv->server_addr;
     struct sockaddr_in *addr_in = &srv->server_addr;
-    srv->cfg = cfg;
-
     printf("SERVER: Initializing server...\n");
 
     // Construct the IP
     memset(addr_in, 0, sizeof(*addr_in));
-
     addr_in->sin_family = AF_INET;        // Set Family
     addr_in->sin_port = htons(cfg->port); // Set Port
-
     if (strcmp(cfg->ip_address, "localhost") == 0)
         addr_in->sin_addr.s_addr = INADDR_ANY;
     else
@@ -82,22 +80,22 @@ int start_server(server *srv)
     memset(&client_address, 0, client_addrlen);
 
     int client_fd;
-
     int max_players = srv->max_players;
+    int n_pfd = max_players + 1;
+
+    struct pollfd pfd[n_pfd];
+
+    pfd[0].fd = srv->server_fd;
+    pfd[0].events = POLLIN;
+    pfd[0].revents = 0;
+
     while (1)
     {
 
-        client_fd = accept(srv->server_fd, (struct sockaddr *)&client_address, &client_addrlen);
-        if (client_fd < 0)
-        {
-            perror("accept");
-            continue;
-        }
-        fcntl(client_fd, F_SETFL, O_NONBLOCK);
+        poll(pfd, n_pfd, -1);
 
-        // terminate gracefully?
-        if (handle_client_connection(client_fd, max_players) < 0)
-            reject_client(client_fd);
+        if (pfd[0].revents & POLLIN){
+        }
     }
 
     return 0;

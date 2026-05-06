@@ -14,6 +14,8 @@ typedef struct {
     client *clients;
     int max_players;
 
+
+    int pollfd_index;
     const config *cfg;
 } server;
 

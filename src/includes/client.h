@@ -2,7 +2,8 @@
 #define CLIENT_H
 
 #include <netinet/in.h>
-
+#include <errno.h>
+#include "server.h"
 /*
  * Represents a single connected client. is_used is 0 for empty slots, non-zero for active ones.
  */
@@ -31,13 +32,16 @@ void close_client(int client_fd);
  * once the client has been placed into a slot.
  * Returns 0 on normal completion, -1 on error.
  */
-int handle_client_connection(int client_fd, int max_players);
+int handle_client_connect(server *srv);
 
 /*
  * Find the first unused slot in the clients array.
  * Returns the slot index on success, or -1 if all slots are full.
  */
 int check_for_open_slots(client *clients, int max_players);
+
+
+
 
 /*
  * Reject a client connection that could not be admitted to the server.
