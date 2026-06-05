@@ -1,27 +1,15 @@
-
-
-#define CLIENT_BUFFER_SIZE 1024
+#ifndef EVENTS_H
+#define EVENTS_H
 
 typedef struct server server;
 typedef struct client client;
 
+#define CLIENT_BUFFER_SIZE 1024
 
-/*
- * Handle read events for a client
- */
-void handle_client_read(client* cl);
+void handle_events(server *srv);
 
-/*
- * Handle I/O for a single connected client. Called after a successful accept()
- * once the client has been placed into a slot.
- * Returns 0 on normal completion, -1 on error.
- */
-int handle_client_connect(server *srv);
+int handle_accept_event(server *srv);
+int handle_read_event(client *cl);
+void handle_disconnect_event(client *cl);
 
-
-/*
- * Handle disconnect events for a client
- */
-void handle_client_disconnect(client* cl);
-
-
+#endif

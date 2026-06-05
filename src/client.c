@@ -32,7 +32,7 @@ void add_client(server *srv, int client_fd, struct sockaddr_in client_address, i
     srv->clients[idx].idx = idx;
 
     srv->pfd_list[idx + 1].fd = client_fd;
-    srv->pfd_list[idx + 1].events = POLLIN;
+    srv->pfd_list[idx + 1].events = POLLIN | POLLHUP | POLLERR;
 }
 
 void reject_client(int client_fd)

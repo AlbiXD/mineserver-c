@@ -10,13 +10,14 @@ int init_server(server *srv, const config *cfg)
     srv->cfg = cfg;
     srv->max_players = cfg->max_players;
     srv->clients = malloc(sizeof(client) * cfg->max_players); // Initialize the client list
+
     if (!srv->clients)
     {
         perror("malloc");
         return -1;
     }
 
-    srv->pfd_list = malloc(sizeof(struct pollfd) * srv->max_players + 1); // Initialize the pollfd list
+    srv->pfd_list = malloc(sizeof(struct pollfd) * (srv->max_players + 1)); // Initialize the pollfd list
 
     init_client_list(srv); // Initializes the client list + pollfd list
 
@@ -71,27 +72,17 @@ int start_server(server *srv)
 
     // Listening socket / server socket poll
     pfd[0].fd = srv->server_fd;
-    pfd[0].events = POLLIN;
+    pfd[0].events = POLLIN | POLLHUP | POLLERR;
     pfd[0].revents = 0;
 
     for (;;) // Main server loop
     {
-        poll(pfd, n_pfd, -1);
+        int pf = poll(pfd, n_pfd, -1);
 
-        // client connection
-        if (pfd[0].revents & POLLIN)
-            handle_client_connect(srv);
 
-        // client I/O events n_pfd is 11
-        //0-10 0 is server socket, 1-10 are clients
-        for(int i = 1; i < n_pfd; i++){
-            if(pfd[i].revents & POLLIN){
-                // Handle client data
-                printf("SERVER: Received data from client on fd %d\n", pfd[i].fd);
-            }
-        }
+        handle_events(srv);
+
     }
-    
 
     return 0;
 }
