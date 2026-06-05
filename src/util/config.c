@@ -1,4 +1,4 @@
-#include "./includes/config.h"
+#include "../includes/config.h"
 
 
 void init_default_config(config *cfg)

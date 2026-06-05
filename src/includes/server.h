@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <sys/poll.h>
 #include <errno.h>
-
+#include "socket.h"
 #define BACKLOG 128
 
 typedef struct client client;

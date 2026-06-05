@@ -1,22 +1,17 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -O2
-BUILD = build
-SRC = src
+CFLAGS = -Wall -Wextra -O2 -Iinclude
 
-OBJS = $(BUILD)/events.o $(BUILD)/main.o $(BUILD)/config.o $(BUILD)/server.o $(BUILD)/client.o
+SRC := $(shell find src -name "*.c")
+OBJ := $(patsubst src/%.c,build/%.o,$(SRC))
 
-all: server
+server: $(OBJ)
+	$(CC) $(OBJ) -o $@
 
-server: $(OBJS)
-	$(CC) $(OBJS) -o $@
-
-$(BUILD)/%.o: $(SRC)/%.c | $(BUILD)
+build/%.o: src/%.c
+	mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILD):
-	mkdir -p $(BUILD)
-
 clean:
-	rm -rf server $(BUILD)
+	rm -rf build server
 
-.PHONY: all clean
+.PHONY: clean
