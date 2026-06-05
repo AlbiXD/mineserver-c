@@ -36,8 +36,12 @@ int handle_accept_event(server *srv)
     }
 }
 
-void handle_disconnect_event(client *cl)
+void handle_disconnect_event(server *srv, client *cl)
 {
+    printf("Disconnect event\n");
+    struct pollfd *pfd = srv->pfd_list;
+    pfd[cl->pfd_idx].fd = -1;
+    cl->is_used = 0;
     close(cl->client_fd);
 }
 
@@ -51,9 +55,9 @@ int handle_read_event(client *cl)
     if (f <= 0)
     {
         printf("Client is hanging up\n");
-        handle_disconnect_event(cl);
         return -1;
     }
+
     return 0;
 }
 
@@ -73,24 +77,27 @@ void handle_events(server *srv)
     // 0-10 0 is server socket, 1-10 are clients
     for (int i = 1; i < n_pfd; i++)
     {
-        int ci = i - 1;
+        if(pfd[i].fd == -1)
+            continue;
 
+        int ci = i - 1;
+        client* cl = &srv->clients[ci];
         // if(!srv->clients[i-1].is_used) continue;
+
 
         if (pfd[i].revents & (POLLHUP | POLLNVAL))
         {
             pfd[i].fd = -1;
             printf("SERVER: Client is quitting?\n");
+            handle_disconnect_event(srv, cl);
         }
 
         if (pfd[i].revents & POLLIN)
         {
             // Handle client data
             printf("SERVER: Received data from client on fd %d\n", pfd[i].fd);
-            if (handle_read_event(&srv->clients[ci]) < -1)
-            {
-                handle_disconnect_event(&srv->clients[ci]);
-            }
+            if (handle_read_event(cl) <= EOF)
+                handle_disconnect_event(srv, cl);
         }
     }
 }

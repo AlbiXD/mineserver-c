@@ -10,6 +10,6 @@ void handle_events(server *srv);
 
 int handle_accept_event(server *srv);
 int handle_read_event(client *cl);
-void handle_disconnect_event(client *cl);
+void handle_disconnect_event(server *srv, client *cl);
 
 #endif

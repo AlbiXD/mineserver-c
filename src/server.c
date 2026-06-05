@@ -30,6 +30,7 @@ int init_server(server *srv, const config *cfg)
     memset(addr_in, 0, sizeof(*addr_in));
     addr_in->sin_family = AF_INET;        // Set Family
     addr_in->sin_port = htons(cfg->port); // Set Port
+
     if (strcmp(cfg->ip_address, "localhost") == 0)
         addr_in->sin_addr.s_addr = INADDR_ANY;
     else
@@ -55,9 +56,9 @@ int init_server(server *srv, const config *cfg)
         perror("SERVER");
         return -1;
     }
+
     printf("SERVER: Starting on IP %s\n", cfg->ip_address);
     printf("SERVER: Running on PORT %hu\n", cfg->port);
-
     printf("SERVER: Server initialized!\n");
 
     return 0;
@@ -78,10 +79,7 @@ int start_server(server *srv)
     for (;;) // Main server loop
     {
         int pf = poll(pfd, n_pfd, -1);
-
-
         handle_events(srv);
-
     }
 
     return 0;
