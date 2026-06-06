@@ -17,7 +17,7 @@
 typedef struct server server;
 
 /*
-Returns listening socket
+Returns listening socket 
 */
 int create_listening_socket(server* server);
 

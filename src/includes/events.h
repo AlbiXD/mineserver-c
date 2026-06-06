@@ -1,5 +1,6 @@
 #ifndef EVENTS_H
 #define EVENTS_H
+#include "packet.h"
 
 typedef struct server server;
 typedef struct client client;

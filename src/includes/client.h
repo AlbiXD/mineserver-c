@@ -7,6 +7,10 @@
 #include <stdio.h>
 #include <unistd.h>
 
+
+#define KB 1024
+#define MULTIPLE 1
+
 typedef struct server server;
 
 /*
@@ -18,6 +22,13 @@ typedef struct client {
     int is_used;                    /* 0 = slot is empty, 1 = slot holds an active client */
     int pfd_idx;                    /* index into the server's pfd_list array */
     int idx;                        /* index into the server's clients array */
+
+    uint8_t client_buffer[MULTIPLE * KB];
+    size_t bytes_read;
+
+    char username[16];
+    int packet_len;
+
 } client;
 
 /*

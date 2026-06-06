@@ -17,7 +17,7 @@ int main()
         return -1;
 
 
-    start_server(&srv);
+    start_server(&srv); // Enters main server loop
 
 
     stop_server(&srv);
