@@ -133,7 +133,7 @@ void handle_events(server *srv)
         {
             // Handle client data
             printf("SERVER: Received data from client on fd %d\n", pfd[i].fd);
-            if (handle_read_event(cl) <= EOF)
+            if (handle_read_event(cl) == PACKET_ERROR)
                 handle_disconnect_event(srv, cl);
         }
     }
