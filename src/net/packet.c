@@ -38,7 +38,7 @@ int packet_assembler(client *cl)
         cl->packet_len = size;
 
         printf("offset=%td, size=%d\n", packet_ptr - client_buffer, size);
-        if(packet_ptr-client_buffer >= bytes_read) return PACKET_INCOMPLETE;
+        if((size_t) (packet_ptr-client_buffer) >= bytes_read) return PACKET_INCOMPLETE;
 
 
         size = 0;
@@ -70,7 +70,7 @@ int packet_assembler(client *cl)
 
         packet_init(&packet, packet_id, packet_ptr, size);
 
-        
+
         // packet_parser();
         // packet_dispatcher();
     }
@@ -111,7 +111,7 @@ int packet_length(uint8_t *client_buffer, uint8_t *packet_pointer, size_t *bytes
             return PACKET_INCOMPLETE;
 
         size = 3 + packet_pointer[2] * 2;
-        if (bytes_read < size)
+        if (bytes_read < (size_t) size)
             return PACKET_INCOMPLETE;
 
         printf("handling hanshake %d\n", size);
