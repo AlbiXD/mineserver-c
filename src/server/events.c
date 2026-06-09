@@ -55,6 +55,7 @@ int handle_read_event(client *cl)
     int n = 0;
     uint8_t new_data = 0;
 
+    int rval = 0;
     while (1)
     {
 
@@ -71,6 +72,8 @@ int handle_read_event(client *cl)
         {
             new_data = 1;
             bytes_read += n;
+            cl->bytes_read = bytes_read; // stores for later use
+            printf("Reading...\n");
             continue;
         }
 
@@ -81,10 +84,9 @@ int handle_read_event(client *cl)
             return -1;
         }
 
-        cl->bytes_read = bytes_read; // stores for later use
 
-        printf("bytes_read=%lu\n", bytes_read);
     }
+    printf("bytes_read=%lu\n", bytes_read);
 
     if (n == 0)
     {
@@ -93,9 +95,9 @@ int handle_read_event(client *cl)
     }
 
     if (new_data)
-        packet_assembler(cl);
+        rval = packet_assembler(cl);
 
-    return 0;
+    return rval;
 }
 
 void handle_events(server *srv)

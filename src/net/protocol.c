@@ -1,22 +1,13 @@
 #include "../includes/protocol.h"
-#include <stdio.h>
 
-// Will return the size in bytes of the packet or a -1 if packet is incomplete
-int parse_handshake(uint8_t *client_buffer, uint8_t *packet_id ,size_t bufflen, size_t bytes_read){
+int handshake_length(uint8_t *buffer, size_t bytes_read){
+
     int size = 0;
+    if(bytes_read < 3) return -1;
+    size = buffer[2];
+    if(bytes_read < size) return -1;
 
-    printf("Handling handshake\n");
-    if(bytes_read < 3){
-        printf("Partial Packet\n");        
-        return 0;
-    }
-    
-    size = 3 + client_buffer[2] * 2;
-
-    printf("%d\n", size);
-
-    if(bytes_read < size) return 0;
-
+    printf("handling hanshake %d\n", size);
 
     return size;
 }
