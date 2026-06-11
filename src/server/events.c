@@ -3,7 +3,7 @@
 #include "../includes/client.h"
 #include "../includes/events.h"
 
-int handle_accept_event(server *srv)
+int EVENT_Accept(server *srv)
 {
     struct sockaddr_in client_address;
     socklen_t client_addrlen = sizeof(client_address);
@@ -22,20 +22,20 @@ int handle_accept_event(server *srv)
         if (fcntl(client_fd, F_SETFL, O_NONBLOCK) < 0)
             return -1;
         printf("Client connected\n");
-        int idx = check_for_open_slots(srv->clients, srv->max_players);
+        int idx = CL_OpenSlot(srv->clients, srv->max_players);
 
         // Terminate gracefully if no slots are open
         if (idx < 0)
         {
-            reject_client(client_fd);
+            CL_Reject(client_fd);
             continue;
         }
 
-        add_client(srv, client_fd, client_address, idx);
+        CL_Add(srv, client_fd, client_address, idx);
     }
 }
 
-void handle_disconnect_event(server *srv, client *cl)
+void EVENT_Disconnect(server *srv, client *cl)
 {
     printf("Disconnect event\n");
     struct pollfd *pfd = srv->pfd_list;
@@ -45,7 +45,7 @@ void handle_disconnect_event(server *srv, client *cl)
     close(cl->client_fd);
 }
 
-int handle_read_event(client *cl)
+int EVENT_Read(client *cl)
 {
     char *client_buffer = cl->client_buffer;
 
@@ -93,7 +93,7 @@ int handle_read_event(client *cl)
     }
 
     if (new_data)
-        rval = packet_assembler(cl);
+        rval = PKT_Assemble(cl);
 
     if(rval == BUFFER_CONSUMED){
         cl->bytes_read = 0;
@@ -101,7 +101,7 @@ int handle_read_event(client *cl)
     return rval;
 }
 
-void handle_events(server *srv)
+void EVENT_Handle(server *srv)
 {
     struct pollfd *pfd = srv->pfd_list;
     int n_pfd = srv->max_players + 1;
@@ -110,7 +110,7 @@ void handle_events(server *srv)
 
     // client connection
     if (pfd[0].revents & POLLIN)
-        handle_accept_event(srv);
+        EVENT_Accept(srv);
 
     // client I/O events n_pfd is 11
     // 0-10 0 is server socket, 1-10 are clients
@@ -127,15 +127,15 @@ void handle_events(server *srv)
         {
             pfd[i].fd = -1;
             printf("SERVER: Client is quitting?\n");
-            handle_disconnect_event(srv, cl);
+            EVENT_Disconnect(srv, cl);
         }
 
         if (pfd[i].revents & POLLIN)
         {
             // Handle client data
             printf("SERVER: Received data from client on fd %d\n", pfd[i].fd);
-            if (handle_read_event(cl) == PACKET_ERROR)
-                handle_disconnect_event(srv, cl);
+            if (EVENT_Read(cl) == PACKET_ERROR)
+                EVENT_Disconnect(srv, cl);
         }
     }
 }

@@ -3,7 +3,7 @@
 #include "../includes/client.h"
 #include "../includes/events.h"
 
-int init_server(server *srv, const config *cfg)
+int SV_Init(server *srv, const config *cfg)
 {
 
     srv->cfg = cfg;                                                         // Point to config in main
@@ -11,7 +11,7 @@ int init_server(server *srv, const config *cfg)
     srv->clients = malloc(sizeof(client) * cfg->max_players);               // Initialize the client list
     srv->pfd_list = malloc(sizeof(struct pollfd) * (srv->max_players + 1)); // Initialize the pollfd list
 
-    if ((srv->server_fd = create_listening_socket(srv)) < 0)
+    if ((srv->server_fd = SOCKET_CreateListening(srv)) < 0)
         return -1; // Remove line maybe
 
     if (!srv->clients)
@@ -26,7 +26,7 @@ int init_server(server *srv, const config *cfg)
         return -1;
     }
 
-    init_client_list(srv); // Initializes the client list + pollfd list
+    CL_InitList(srv); // Initializes the client list + pollfd list
 
     printf("SERVER: Starting on IP %s\n", cfg->ip_address);
     printf("SERVER: Running on PORT %hu\n", cfg->port);
@@ -35,7 +35,7 @@ int init_server(server *srv, const config *cfg)
     return 0;
 }
 
-int start_server(server *srv)
+int SV_Start(server *srv)
 {
 
     printf("SERVER: Server is now online and ready to accept clients\n");
@@ -48,18 +48,18 @@ int start_server(server *srv)
 
     for (;;) // Main server loop
     {
-        handle_events(srv);
+        EVENT_Handle(srv);
     }
 
     return 0;
 }
 
-void stop_server(server *srv)
+void SV_Stop(server *srv)
 {
 
     printf("SERVER: Shutting down server...\n");
     // Need to free and close clients
-    close_all_clients(srv);
+    CL_CloseAll(srv);
     close(srv->server_fd); // Close Server
     free(srv->pfd_list);
     free(srv->clients);

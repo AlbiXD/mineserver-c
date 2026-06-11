@@ -32,7 +32,7 @@ typedef struct server {
  *
  * Returns 0 on success, -1 on failure.
  */
-int init_server(server *srv, const config *cfg);
+int SV_Init(server *srv, const config *cfg);
 
 /*
  * Enter the accept loop. Blocks until stop_server() is called
@@ -40,12 +40,12 @@ int init_server(server *srv, const config *cfg);
  *
  * Returns 0 on clean shutdown, -1 on error.
  */
-int start_server(server *srv);
+int SV_Start(server *srv);
 
 /*
  * Signal the accept loop to exit.
  */
-void stop_server(server *srv);
+void SV_Stop(server *srv);
 
 
 /*

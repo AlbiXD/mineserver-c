@@ -4,12 +4,8 @@
 // int packet_parser(client* cl, client_packet packet){
 
 // }
-const packet_id_t handshake_map[] = {
-    KEEP_ALIVE,
-    HANDSHAKE,
-    LOGIN};
 
-int packet_assembler(client *cl)
+int PKT_Assemble(client *cl)
 {
     packet_t packet;
 
@@ -26,7 +22,8 @@ int packet_assembler(client *cl)
         cl->packet_len = size;
 
         printf("offset=%td, size=%d\n", packet_ptr - client_buffer, size); // We have consumed all bytes
-        if ((size_t)(packet_ptr - client_buffer) >= bytes_read){
+        if ((size_t)(packet_ptr - client_buffer) >= bytes_read)
+        {
             return NEED_DATA;
         }
 
@@ -40,19 +37,19 @@ int packet_assembler(client *cl)
             return PACKET_ERROR;
         }
 
-        if ((size = packet_length(client_buffer, packet_ptr, &cl->bytes_read, *packet_ptr)) < 0)
+        if ((size = PKT_Length(client_buffer, packet_ptr, &cl->bytes_read, *packet_ptr)) < 0)
             return size;
 
-        packet_init(&packet, *packet_ptr, packet_ptr, size);
+        PKT_Init(&packet, *packet_ptr, packet_ptr, size);
 
-        rval = packet_parser(&packet);
-        packet_dispatcher(cl, *packet_ptr);
+        rval = PKT_Parser(&packet);
+        PKT_Dispatcher(cl, *packet_ptr);
     }
 
     return rval;
 }
 
-void packet_dispatcher(client *cl, packet_id_t id)
+void PKT_Dispatcher(client *cl, packet_id_t id)
 {
     switch (id)
     {
@@ -77,12 +74,12 @@ void packet_dispatcher(client *cl, packet_id_t id)
     return;
 }
 
-int packet_parser(packet_t *packet)
+int PKT_Parser(packet_t *packet)
 {
     return PACKET_OK;
 }
 
-int packet_init(packet_t *packet, packet_id_t id, uint8_t *payload, size_t packet_length)
+int PKT_Init(packet_t *packet, packet_id_t id, uint8_t *payload, size_t packet_length)
 {
     packet->id = id;
     packet->payload = payload;
@@ -90,7 +87,7 @@ int packet_init(packet_t *packet, packet_id_t id, uint8_t *payload, size_t packe
     return PACKET_OK;
 }
 
-int packet_length(uint8_t *client_buffer, uint8_t *packet_pointer, size_t *bytes_read_ptr, packet_id_t packet_id)
+int PKT_Length(uint8_t *client_buffer, uint8_t *packet_pointer, size_t *bytes_read_ptr, packet_id_t packet_id)
 {
     size_t bytes_read = *bytes_read_ptr;
     size_t offset = packet_pointer - client_buffer;
@@ -109,32 +106,30 @@ int packet_length(uint8_t *client_buffer, uint8_t *packet_pointer, size_t *bytes
 
         // Do we have the minimum header
         //  Do I have minimum bytes for header?
-        int r = 0;
-        if ((r = packet_header_check(offset, remaining_bytes, 3)) == BUFFER_CONSUMED)
-        {
-            memmove(client_buffer, packet_pointer, remaining_bytes + 1);
-            *bytes_read_ptr = remaining_bytes;
-            return PACKET_INCOMPLETE;
-        }
-        else if (r == HEADER_INCOMPLETE) return PACKET_INCOMPLETE; // need to change the 3 into enumerated type
+            int r = 0;
+            
+            if ((r = PKT_LengthCheck(offset, remaining_bytes, 3)) == BUFFER_CONSUMED)
+            {
+                memmove(client_buffer, packet_pointer, remaining_bytes + 1);
+                *bytes_read_ptr = remaining_bytes;
+                return PACKET_INCOMPLETE;
+            }
+            else if (r == HEADER_INCOMPLETE)
+                return PACKET_INCOMPLETE; // need to change the 3 into enumerated type
 
-        // We have minimum header
-        size = packet_pointer[2] * 2 + 3;
+            // We have minimum header
+            size = packet_pointer[2] * 2 + 3;
 
-        // Do I have minimum bytes for header?
-        if (offset + size > BUFFER_LENGTH)
-        {
-            memmove(client_buffer, packet_pointer, remaining_bytes + 1);
-            *bytes_read_ptr = remaining_bytes;
-            return PACKET_INCOMPLETE;
-        }
+            if ((r = PKT_LengthCheck(offset, remaining_bytes, size)) == BUFFER_CONSUMED)
+            {
+                memmove(client_buffer, packet_pointer, remaining_bytes + 1);
+                *bytes_read_ptr = remaining_bytes;
+                return PACKET_INCOMPLETE;
+            }
+            else if (r == HEADER_INCOMPLETE)
+                return PACKET_INCOMPLETE; // need to change the 3 into enumerated type
 
-        // // YESc
-        // // Is my data valid beyond this pointer?
-        if (remaining_bytes < ((size_t)size) - 1)
-            return PACKET_INCOMPLETE;
-
-        return size;
+            return size;
     }
 
     default:
@@ -143,22 +138,22 @@ int packet_length(uint8_t *client_buffer, uint8_t *packet_pointer, size_t *bytes
     }
 }
 
-void packet_mmove(uint8_t *client_buffer, uint8_t *packet, size_t packet_len)
+void PKT_Mmove(uint8_t *client_buffer, uint8_t *packet, size_t packet_len)
 {
     memmove(client_buffer, packet, packet_len);
 }
 
-int packet_header_check(size_t offset, size_t remaining_bytes, size_t header_size)
+int PKT_LengthCheck(size_t offset, size_t remaining_bytes, size_t size)
 {
     // Do we have the minimum header
     //  Do I have minimum bytes for header?
-    if (offset + header_size > BUFFER_LENGTH) // Do we have enough bytes?
+    if (offset + size > BUFFER_LENGTH) // Do we have enough bytes?
         return BUFFER_CONSUMED;
     // Is my data valid beyond this pointer? 0A 0B 0C 02 00 06 5-4 == 1
     // offset = 4
     // bytes_read = 5
     // 5-4 == 1 meaning there is one byte that is valid
-    if (remaining_bytes < header_size) // if so we need 2 bytes ahead of this that are valid
+    if (remaining_bytes < size) // if so we need 2 bytes ahead of this that are valid
         return HEADER_INCOMPLETE;
 
     return HEADER_OK;

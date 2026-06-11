@@ -12,7 +12,6 @@ typedef enum {
     HANDSHAKE = 2
 } packet_id_t;
 
-extern const packet_id_t handshake_map[];
 
 typedef struct {
     packet_id_t id;
@@ -32,11 +31,11 @@ typedef enum {
     NEED_DATA = -6
 } packet_status_t;
 
-int packet_assembler(client * cl);
-void packet_dispatcher(client * cl, packet_id_t id);
-void packet_mmove(uint8_t *client_buffer, uint8_t *packet, size_t packet_len);
-int packet_header_check(size_t offset, size_t remaining_bytes, size_t header_size);
-int packet_parser(packet_t *packet);
-int packet_init(packet_t *packet, packet_id_t id, uint8_t *payload, size_t packet_length);
-int packet_length(uint8_t *client_buffer, uint8_t *packet_pointer, size_t* bytes_read_ptr, packet_id_t packet_id);
+int PKT_Assemble(client * cl);
+void PKT_Dispatcher(client * cl, packet_id_t id);
+void PKT_Mmove(uint8_t *client_buffer, uint8_t *packet, size_t packet_len);
+int PKT_LengthCheck(size_t offset, size_t remaining_bytes, size_t size);
+int PKT_Parser(packet_t *packet);
+int PKT_Init(packet_t *packet, packet_id_t id, uint8_t *payload, size_t packet_length);
+int PKT_Length(uint8_t *client_buffer, uint8_t *packet_pointer, size_t* bytes_read_ptr, packet_id_t packet_id);
 #endif

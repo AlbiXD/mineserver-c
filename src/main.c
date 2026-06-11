@@ -10,17 +10,17 @@ int main()
     server srv;
 
     // Parse config
-    init_config(&cfg);
+    CFG_Init(&cfg);
 
     // Initialize the server
-    if (init_server(&srv, &cfg) < 0)
+    if (SV_Init(&srv, &cfg) < 0)
         return -1;
 
 
-    start_server(&srv); // Enters main server loop
+    SV_Start(&srv); // Enters main server loop
 
 
-    stop_server(&srv);
+    SV_Stop(&srv);
 
     //Destroy server
     return 0;

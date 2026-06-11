@@ -1,7 +1,7 @@
 #include "../includes/socket.h"
 #include "../includes/server.h"
 
-int create_listening_socket(server *srv)
+int SOCKET_CreateListening(server *srv)
 {
 
     int sfd = 0;

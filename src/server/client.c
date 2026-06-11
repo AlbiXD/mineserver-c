@@ -1,7 +1,7 @@
 #include "../includes/server.h"
 #include "../includes/client.h"
 
-void init_client_list(server *srv)
+void CL_InitList(server *srv)
 {
     for (int i = 0; i < srv->max_players; i++)
     {
@@ -13,7 +13,7 @@ void init_client_list(server *srv)
     }
 }
 
-int check_for_open_slots(client *clients, int max_players)
+int CL_OpenSlot(client *clients, int max_players)
 {
 
     for (int i = 0; i < max_players; i++)
@@ -23,7 +23,7 @@ int check_for_open_slots(client *clients, int max_players)
     return -1;
 }
 
-void add_client(server *srv, int client_fd, struct sockaddr_in client_address, int idx)
+void CL_Add(server *srv, int client_fd, struct sockaddr_in client_address, int idx)
 {
     srv->clients[idx].client_addr = client_address;
     srv->clients[idx].client_fd = client_fd;
@@ -35,12 +35,12 @@ void add_client(server *srv, int client_fd, struct sockaddr_in client_address, i
     srv->pfd_list[idx + 1].events = POLLIN | POLLHUP | POLLERR;
 }
 
-void reject_client(int client_fd)
+void CL_Reject(int client_fd)
 {
     close(client_fd);
 }
 
-void close_all_clients(server *srv)
+void CL_CloseAll(server *srv)
 {
     for (int i = 0; i < srv->max_players; i++)
     {

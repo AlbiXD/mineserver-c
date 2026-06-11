@@ -1,7 +1,7 @@
 #include "../includes/config.h"
 
 
-void init_default_config(config *cfg)
+void CFG_DefaultConfig(config *cfg)
 {
     FILE *file;
     file = fopen("server.properties", "w");
@@ -18,7 +18,7 @@ void init_default_config(config *cfg)
     return;
 }
 
-void parse_config(config *cfg)
+void CFG_Parse(config *cfg)
 {
     FILE *f = fopen("server.properties", "r");
     char buffer[256];
@@ -55,13 +55,13 @@ void parse_config(config *cfg)
     if (cfg->is_valid < CONFIG_OPTIONS)
     {
         printf("CONFIG: Config is missing fields regenerating from default...\n");
-        return init_default_config(cfg);
+        return CFG_DefaultConfig(cfg);
     }
 
     return;
 }
 
-void init_config(config *cfg)
+void CFG_Init(config *cfg)
 {
 
     // Check if config exists
@@ -69,14 +69,14 @@ void init_config(config *cfg)
     if (access("server.properties", F_OK) != 0)
     {
         printf("CONFIG: Not found, generating new config...\n");
-        return init_default_config(cfg);
+        return CFG_DefaultConfig(cfg);
     }
 
     // If config exists parse
     printf("CONFIG: Config found parsing...\n");
 
     // If it does not create default config
-    parse_config(cfg);
+    CFG_Parse(cfg);
 
 
     printf("CONFIG: Successfully parsed!\n");

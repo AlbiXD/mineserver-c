@@ -36,33 +36,33 @@ typedef struct client {
 /*
  * Close all connected clients and mark their slots as unused.
  */
-void close_all_clients(server *srv);
+void CL_CloseAll(server *srv);
 
 /*
  * Initialize an array of `max_players` client slots, marking each as unused.
  * Must be called once after allocating the array, before any other client
  * operations are performed.
  */
-void init_client_list(server *srv);
+void CL_InitList(server *srv);
 
 /*
  * Close a client's socket. Caller is responsible for also marking the
  * corresponding slot as unused (is_used = 0).
  */
-void close_client(int client_fd);
+void CL_Close(int client_fd);
 
 /*
  * Find the first unused slot in the clients array.
  * Returns the slot index on success, or -1 if all slots are full.
  */
-int check_for_open_slots(client *clients, int max_players);
+int CL_OpenSlot(client *clients, int max_players);
 
 /*
  * Place an accepted client into slot `idx` of the server's clients array,
  * and register its socket in the corresponding pollfd slot for POLLIN.
  * Caller must ensure `idx` refers to an unused slot (see check_for_open_slots).
  */
-void add_client(server *srv, int client_fd, struct sockaddr_in client_address, int idx);
+void CL_Add(server *srv, int client_fd, struct sockaddr_in client_address, int idx);
 
 /*
  * Reject a client connection that could not be admitted to the server.
@@ -70,6 +70,6 @@ void add_client(server *srv, int client_fd, struct sockaddr_in client_address, i
  * The client was never placed into the clients array, so no slot
  * bookkeeping is performed.
  */
-void reject_client(int client_fd);
+void CL_Reject(int client_fd);
 
 #endif
