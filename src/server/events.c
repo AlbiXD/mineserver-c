@@ -83,20 +83,21 @@ int handle_read_event(client *cl)
                 break;
             return -1;
         }
-
-
     }
     printf("bytes_read=%lu\n", bytes_read);
 
     if (n == 0)
     {
         printf("Client is hanging up\n");
-        return -1;
+        return -3;
     }
 
     if (new_data)
         rval = packet_assembler(cl);
 
+    if(rval == BUFFER_CONSUMED){
+        cl->bytes_read = 0;
+    }
     return rval;
 }
 

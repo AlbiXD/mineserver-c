@@ -11,6 +11,8 @@
 #define KB 1024
 #define MULTIPLE 1
 
+#define BUFFER_LENGTH KB * MULTIPLE
+
 typedef struct server server;
 
 /*
@@ -23,7 +25,7 @@ typedef struct client {
     int pfd_idx;                    /* index into the server's pfd_list array */
     int idx;                        /* index into the server's clients array */
 
-    uint8_t client_buffer[MULTIPLE * KB];
+    uint8_t client_buffer[BUFFER_LENGTH];
     size_t bytes_read;
 
     char username[16];
