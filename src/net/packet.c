@@ -5,6 +5,10 @@
 
 // }
 
+const packet_meta_t PLTB[ENUM_LENGTH] = {
+    [LOGIN] = {LOGIN, 5, 4, 1},
+    [HANDSHAKE] = {HANDSHAKE, 3, 2, 1}};
+
 int PKT_Assemble(client *cl)
 {
     packet_t packet;
@@ -15,13 +19,14 @@ int PKT_Assemble(client *cl)
     size_t bytes_read = cl->bytes_read;
     packet_status_t rval = PACKET_OK;
 
+    printf("bytes_read=%d\n", bytes_read);
+
     while (1)
     {
 
         packet_ptr += size;
         cl->packet_len = size;
 
-        printf("offset=%td, size=%d\n", packet_ptr - client_buffer, size); // We have consumed all bytes
         if ((size_t)(packet_ptr - client_buffer) >= bytes_read)
         {
             return NEED_DATA;
@@ -89,53 +94,44 @@ int PKT_Init(packet_t *packet, packet_id_t id, uint8_t *payload, size_t packet_l
 
 int PKT_Length(uint8_t *client_buffer, uint8_t *packet_pointer, size_t *bytes_read_ptr, packet_id_t packet_id)
 {
+
+    if (packet_id == 0 || packet_id > 0x2)
+    {
+        printf("Packet Not Finished Yet\n");
+        return PACKET_ERROR;
+    }
     size_t bytes_read = *bytes_read_ptr;
     size_t offset = packet_pointer - client_buffer;
-    // bytes_read
-    int size = 0;
     size_t remaining_bytes = bytes_read - offset;
-    switch (packet_id)
+    int size = PLTB[packet_id].minSize;
+    printf("offset=%td, size=%d\n", offset, size); // We have consumed all bytes
+
+    int r = 0;
+
+    // Do we have just enough information to get the dynamic size?
+    if ((r = PKT_LengthCheck(offset, remaining_bytes, size)) == BUFFER_CONSUMED)
     {
-    case LOGIN:
+        memmove(client_buffer, packet_pointer, remaining_bytes + 1);
+        *bytes_read_ptr = remaining_bytes;
+        return PACKET_INCOMPLETE;
+    }
+    else if (r == PACKET_INCOMPLETE)
+        return PACKET_INCOMPLETE; // need to change the 3 into enumerated type
+
+    size = packet_pointer[PLTB[packet_id].sizeOffset] * 2 + size;
+
+    // Do we have the whole packet?
+    if ((r = PKT_LengthCheck(offset, remaining_bytes, size)) == BUFFER_CONSUMED)
     {
-        printf("Handling login\n");
-        return PACKET_ERROR;
+        memmove(client_buffer, packet_pointer, remaining_bytes + 1);
+        *bytes_read_ptr = remaining_bytes;
+        return PACKET_INCOMPLETE;
     }
-    case HANDSHAKE:
-    {
+    else if (r == PACKET_INCOMPLETE)
+        return PACKET_INCOMPLETE; // need to change the 3 into enumerated type
 
-        // Do we have the minimum header
-        //  Do I have minimum bytes for header?
-            int r = 0;
-            
-            if ((r = PKT_LengthCheck(offset, remaining_bytes, 3)) == BUFFER_CONSUMED)
-            {
-                memmove(client_buffer, packet_pointer, remaining_bytes + 1);
-                *bytes_read_ptr = remaining_bytes;
-                return PACKET_INCOMPLETE;
-            }
-            else if (r == HEADER_INCOMPLETE)
-                return PACKET_INCOMPLETE; // need to change the 3 into enumerated type
-
-            // We have minimum header
-            size = packet_pointer[2] * 2 + 3;
-
-            if ((r = PKT_LengthCheck(offset, remaining_bytes, size)) == BUFFER_CONSUMED)
-            {
-                memmove(client_buffer, packet_pointer, remaining_bytes + 1);
-                *bytes_read_ptr = remaining_bytes;
-                return PACKET_INCOMPLETE;
-            }
-            else if (r == HEADER_INCOMPLETE)
-                return PACKET_INCOMPLETE; // need to change the 3 into enumerated type
-
-            return size;
-    }
-
-    default:
-        printf("Unknown Packet Type\n");
-        return PACKET_ERROR;
-    }
+    printf("We have the full packet %02x, size=%d\n", packet_id, size);
+    return size;
 }
 
 void PKT_Mmove(uint8_t *client_buffer, uint8_t *packet, size_t packet_len)
@@ -149,12 +145,13 @@ int PKT_LengthCheck(size_t offset, size_t remaining_bytes, size_t size)
     //  Do I have minimum bytes for header?
     if (offset + size > BUFFER_LENGTH) // Do we have enough bytes?
         return BUFFER_CONSUMED;
+
     // Is my data valid beyond this pointer? 0A 0B 0C 02 00 06 5-4 == 1
     // offset = 4
     // bytes_read = 5
     // 5-4 == 1 meaning there is one byte that is valid
     if (remaining_bytes < size) // if so we need 2 bytes ahead of this that are valid
-        return HEADER_INCOMPLETE;
+        return PACKET_INCOMPLETE;
 
-    return HEADER_OK;
+    return PACKET_OK;
 }

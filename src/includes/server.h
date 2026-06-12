@@ -51,6 +51,6 @@ void SV_Stop(server *srv);
 /*
  * Release all resources held by server.
  */
-void destroy_server(server *srv);
+void SV_Destroyw(server *srv);
 
 #endif
