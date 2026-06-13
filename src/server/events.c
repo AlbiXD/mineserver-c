@@ -39,6 +39,7 @@ void EVENT_Disconnect(server *srv, client *cl)
 {
     printf("Disconnect event\n");
     struct pollfd *pfd = srv->pfd_list;
+    cl->packet_len = 0;
     pfd[cl->pfd_idx].fd = -1;
     cl->bytes_read = 0;
     cl->is_used = 0;
@@ -47,7 +48,7 @@ void EVENT_Disconnect(server *srv, client *cl)
 
 int EVENT_Read(client *cl)
 {
-    char *client_buffer = cl->client_buffer;
+    uint8_t *client_buffer = cl->client_buffer;
 
     size_t buflen = KB * MULTIPLE;
     size_t bytes_read = cl->bytes_read;
@@ -73,9 +74,13 @@ int EVENT_Read(client *cl)
             new_data = 1;
             bytes_read += n;
             cl->bytes_read = bytes_read; // stores for later use
-            printf("Reading...\n");
+            // for(size_t i = 0; i < n; i++){
+            //     printf("%02x", client_buffer[i]);
+            // }
+            // printf("\n");
             continue;
         }
+
 
         if (n <= 0) // Will check if kernel has no more user bytes
         {
@@ -92,9 +97,11 @@ int EVENT_Read(client *cl)
         return -3;
     }
 
-    if (new_data)
+    if (new_data){
+        printf("Assembling packet\n");
         rval = PKT_Assemble(cl);
 
+    }
     if(rval == BUFFER_CONSUMED){
         cl->bytes_read = 0;
     }
@@ -106,7 +113,9 @@ void EVENT_Handle(server *srv)
     struct pollfd *pfd = srv->pfd_list;
     int n_pfd = srv->max_players + 1;
 
+    printf("Polling...\n");
     poll(pfd, n_pfd, -1);
+
 
     // client connection
     if (pfd[0].revents & POLLIN)

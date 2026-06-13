@@ -29,6 +29,8 @@ int SOCKET_CreateListening(server *srv)
     // Make socket non blocking
     if (fcntl(sfd, F_SETFL, O_NONBLOCK) < 0)
         return -1;
+    int yes = 1;
+    setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
 
     // Bind
     if (bind(sfd, addr, sizeof(*addr)) < 0)

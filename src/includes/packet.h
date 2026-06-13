@@ -40,8 +40,9 @@ typedef enum
     NEED_DATA = -5
 } packet_status_t;
 
+
+
 int PKT_Assemble(client *cl);
-void PKT_Dispatcher(client *cl, packet_id_t id);
 void PKT_Mmove(uint8_t *client_buffer, uint8_t *packet, size_t packet_len);
 int PKT_LengthCheck(size_t offset, size_t remaining_bytes, size_t size);
 int PKT_Parser(packet_t *packet);

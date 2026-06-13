@@ -1,5 +1,6 @@
 // This file will be responsible for assembling a packet
 #include "../includes/packet.h"
+#include "../includes/game.h"
 
 // int packet_parser(client* cl, client_packet packet){
 
@@ -19,16 +20,16 @@ int PKT_Assemble(client *cl)
     size_t bytes_read = cl->bytes_read;
     packet_status_t rval = PACKET_OK;
 
-    printf("bytes_read=%d\n", bytes_read);
-
     while (1)
     {
 
         packet_ptr += size;
         cl->packet_len = size;
+        printf("%lu", (size_t)(packet_ptr - client_buffer));
 
         if ((size_t)(packet_ptr - client_buffer) >= bytes_read)
         {
+            printf("Need more data\n");
             return NEED_DATA;
         }
 
@@ -48,39 +49,44 @@ int PKT_Assemble(client *cl)
         PKT_Init(&packet, *packet_ptr, packet_ptr, size);
 
         rval = PKT_Parser(&packet);
-        PKT_Dispatcher(cl, *packet_ptr);
     }
 
     return rval;
 }
 
-void PKT_Dispatcher(client *cl, packet_id_t id)
+/*
+    Packet Validation -> sends packet to command constructor?
+*/
+int PKT_Parser(packet_t *packet)
 {
+    game_command_t cmd;
+    packet_id_t id = packet->id;
+
     switch (id)
     {
     case HANDSHAKE:
     {
-        printf("Handling handshake\n");
-        unsigned char pkt_offline[] = {
-            0x02,
-            0x00, 0x01,
-            0x00, 0x2D};
+        int idx = 0;
+        for (size_t i = 4; i < packet->packet_length; i += 2)
+        {
+            cmd.handshake.username[idx++] = packet->payload[i];
+        }
+        cmd.handshake.username[idx] = '\0';
 
-        write(cl->client_fd, pkt_offline, 5);
-        break;
+        printf("Parsing Handshake\n");
+
+        return PACKET_OK;
     }
-    case LOGIN:
-        printf("Login Packet\n");
-        break;
+
     default:
-        return;
+    {
+        printf("Unknown Packet Type Cannot Parse\n");
+        return PACKET_ERROR;
+    }
     }
 
-    return;
-}
+    GAME_CommandHandler(&cmd);
 
-int PKT_Parser(packet_t *packet)
-{
     return PACKET_OK;
 }
 
