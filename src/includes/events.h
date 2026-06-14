@@ -7,9 +7,9 @@ typedef struct client client;
 
 #define CLIENT_BUFFER_SIZE 1024
 
-void EVENT_Handle(server *srv);
-int EVENT_Accept(server *srv);
-int EVENT_Read(client *cl);
-void EVENT_Disconnect(server *srv, client *cl);
+void NEVENT_Handle(server *srv);
+int NEVENT_Accept(server *srv);
+int NEVENT_Read(client *cl);
+void NEVENT_Disconnect(server *srv, client *cl);
 
 #endif

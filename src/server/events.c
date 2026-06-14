@@ -3,7 +3,7 @@
 #include "../includes/client.h"
 #include "../includes/events.h"
 
-int EVENT_Accept(server *srv)
+int NEVENT_Accept(server *srv)
 {
     struct sockaddr_in client_address;
     socklen_t client_addrlen = sizeof(client_address);
@@ -35,7 +35,7 @@ int EVENT_Accept(server *srv)
     }
 }
 
-void EVENT_Disconnect(server *srv, client *cl)
+void NEVENT_Disconnect(server *srv, client *cl)
 {
     printf("Disconnect event\n");
     struct pollfd *pfd = srv->pfd_list;
@@ -46,7 +46,7 @@ void EVENT_Disconnect(server *srv, client *cl)
     close(cl->client_fd);
 }
 
-int EVENT_Read(client *cl)
+int NEVENT_Read(client *cl)
 {
     uint8_t *client_buffer = cl->client_buffer;
 
@@ -108,18 +108,17 @@ int EVENT_Read(client *cl)
     return rval;
 }
 
-void EVENT_Handle(server *srv)
+void NEVENT_Handle(server *srv)
 {
     struct pollfd *pfd = srv->pfd_list;
     int n_pfd = srv->max_players + 1;
 
     printf("Polling...\n");
-    poll(pfd, n_pfd, -1);
 
 
     // client connection
     if (pfd[0].revents & POLLIN)
-        EVENT_Accept(srv);
+        NEVENT_Accept(srv);
 
     // client I/O events n_pfd is 11
     // 0-10 0 is server socket, 1-10 are clients
@@ -136,15 +135,15 @@ void EVENT_Handle(server *srv)
         {
             pfd[i].fd = -1;
             printf("SERVER: Client is quitting?\n");
-            EVENT_Disconnect(srv, cl);
+            NEVENT_Disconnect(srv, cl);
         }
 
         if (pfd[i].revents & POLLIN)
         {
             // Handle client data
             printf("SERVER: Received data from client on fd %d\n", pfd[i].fd);
-            if (EVENT_Read(cl) == PACKET_ERROR)
-                EVENT_Disconnect(srv, cl);
+            if (NEVENT_Read(cl) == PACKET_ERROR)
+                NEVENT_Disconnect(srv, cl);
         }
     }
 }

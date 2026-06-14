@@ -73,10 +73,9 @@ int SV_Start(server *srv)
 
         timeout = remaining;
 
-
         if (pret != 0)
         {
-            EVENT_Handle(srv);
+            NEVENT_Handle(srv);
         }
 
         if (timeout <= 0)
