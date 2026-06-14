@@ -12,11 +12,14 @@
 #include <sys/poll.h>
 #include <errno.h>
 #include "socket.h"
+#include <sys/time.h>
+#include <time.h>
 #define BACKLOG 128
 
 typedef struct client client;
 
-typedef struct server {
+typedef struct server
+{
     int server_fd;                  /* listening socket */
     struct sockaddr_in server_addr; /* address the server is bound to */
     client *clients;                /* array of client slots, length max_players */
@@ -46,7 +49,6 @@ int SV_Start(server *srv);
  * Signal the accept loop to exit.
  */
 void SV_Stop(server *srv);
-
 
 /*
  * Release all resources held by server.

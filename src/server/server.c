@@ -45,10 +45,51 @@ int SV_Start(server *srv)
     pfd[0].fd = srv->server_fd;
     pfd[0].events = POLLIN | POLLHUP | POLLERR;
     pfd[0].revents = 0;
+    int n_pfd = srv->max_players + 1;
+    int pret = 0;
+
+    int timeout = 50;
+
+    struct timespec end, start;
+
+    int ticks = 0;
 
     for (;;) // Main server loop
     {
-        EVENT_Handle(srv);
+        clock_gettime(CLOCK_MONOTONIC, &start);
+        pret = poll(pfd, n_pfd, timeout);
+        clock_gettime(CLOCK_MONOTONIC, &end);
+
+        uint64_t total_ms =
+            end.tv_sec * 1000LL +
+            end.tv_nsec / 1000000LL;
+
+        uint64_t start_ms =
+            start.tv_sec * 1000LL +
+            start.tv_nsec / 1000000LL;
+
+        int delta_time = (int)total_ms - (int)start_ms;
+        int remaining = timeout - delta_time;
+
+        timeout = remaining;
+
+
+        if (pret != 0)
+        {
+            EVENT_Handle(srv);
+        }
+
+        if (timeout <= 0)
+        {
+            ticks++;
+            timeout = 50;
+        }
+
+        if (ticks == 20)
+        {
+            printf("20 TPS HIT\n");
+            ticks = 0;
+        }
     }
 
     return 0;
