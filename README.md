@@ -45,6 +45,10 @@ Some websites I found useful!
       https://fabiensanglard.net/quake3/network.php
     </a>
   </li>
+  <li>
+    <a href="https://gafferongames.com/">https://gafferongames.com/</a>
+  </li>
+  <li><a href="https://beej.us/guide/bgnet/pdf/bgnet_usl_c_1.pdf">https://beej.us/guide/bgnet/pdf/bgnet_usl_c_1.pdf</a></li>
 </ul>
 
 
