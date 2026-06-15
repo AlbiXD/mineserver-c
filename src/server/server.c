@@ -86,7 +86,7 @@ int SV_Start(server *srv)
 
         if (ticks == 20)
         {
-            printf("20 TPS HIT\n");
+            // printf("20 TPS HIT\n");
             ticks = 0;
         }
     }

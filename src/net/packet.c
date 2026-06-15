@@ -7,7 +7,7 @@
 // }
 
 const packet_meta_t PLTB[ENUM_LENGTH] = {
-    [LOGIN] = {LOGIN, 5, 4, 1},
+    [LOGIN] = {LOGIN, 16, 6, 1},
     [HANDSHAKE] = {HANDSHAKE, 3, 2, 1}};
 
 int PKT_Assemble(client *cl)
@@ -25,11 +25,11 @@ int PKT_Assemble(client *cl)
 
         packet_ptr += size;
         cl->packet_len = size;
-        printf("%lu", (size_t)(packet_ptr - client_buffer));
+        // printf("%lu", (size_t)(packet_ptr - client_buffer));
 
         if ((size_t)(packet_ptr - client_buffer) >= bytes_read)
         {
-            printf("Need more data\n");
+            // printf("Need more data\n");
             return NEED_DATA;
         }
 
@@ -48,7 +48,7 @@ int PKT_Assemble(client *cl)
 
         PKT_Init(&packet, *packet_ptr, packet_ptr, size);
 
-        rval = PKT_Parser(&packet);
+        rval = PKT_Parser(&packet, cl);
     }
 
     return rval;
@@ -57,25 +57,34 @@ int PKT_Assemble(client *cl)
 /*
     Packet Validation -> sends packet to command constructor?
 */
-int PKT_Parser(packet_t *packet)
+int PKT_Parser(packet_t *packet, client *sender)
 {
-    game_command_t cmd;
+    command_t cmd;
     packet_id_t id = packet->id;
 
     switch (id)
     {
+
     case HANDSHAKE:
     {
         int idx = 0;
         for (size_t i = 4; i < packet->packet_length; i += 2)
         {
-            cmd.handshake.username[idx++] = packet->payload[i];
+            cmd.command.handshake.username[idx++] = packet->payload[i];
         }
-        cmd.handshake.username[idx] = '\0';
-
+        cmd.command.handshake.username[idx] = '\0';
+        cmd.id = HANDSHAKE;
+        cmd.sender = sender;
         printf("Parsing Handshake\n");
-
-        return PACKET_OK;
+        break;
+    }
+    case LOGIN:
+    {
+        cmd.command.login.username[0] = '\0';
+        cmd.id = LOGIN;
+        cmd.sender = sender;
+        printf("Login\n");
+        break;
     }
 
     default:
@@ -111,6 +120,7 @@ int PKT_Length(uint8_t *client_buffer, uint8_t *packet_pointer, size_t *bytes_re
     size_t remaining_bytes = bytes_read - offset;
     int size = PLTB[packet_id].minSize;
     printf("offset=%td, size=%d\n", offset, size); // We have consumed all bytes
+    printf("remaining_bytes=%d, bytes_read=%d\n", remaining_bytes, bytes_read);
 
     int r = 0;
 
@@ -122,10 +132,13 @@ int PKT_Length(uint8_t *client_buffer, uint8_t *packet_pointer, size_t *bytes_re
         return PACKET_INCOMPLETE;
     }
     else if (r == PACKET_INCOMPLETE)
-        return PACKET_INCOMPLETE; // need to change the 3 into enumerated type
+    {
 
+        return PACKET_INCOMPLETE; // need to change the 3 into enumerated type
+    }
     size = packet_pointer[PLTB[packet_id].sizeOffset] * 2 + size;
 
+    printf("size=%d\n", size);
     // Do we have the whole packet?
     if ((r = PKT_LengthCheck(offset, remaining_bytes, size)) == BUFFER_CONSUMED)
     {

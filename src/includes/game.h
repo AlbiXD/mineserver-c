@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+typedef struct client client;
 
 typedef struct
 {
@@ -14,11 +15,19 @@ typedef struct
     uint8_t username[16];
 } cmd_client_login_t;
 
-typedef union {
+typedef union
+{
     cmd_client_handshake_t handshake;
     cmd_client_login_t login;
-}game_command_t;
+} game_command_t;
 
-int GAME_CommandHandler(game_command_t *cmd);
+typedef struct
+{
+    int id;
+    client *sender;
+    game_command_t command;
+} command_t;
+
+int GAME_CommandHandler(command_t *cmd);
 
 #endif

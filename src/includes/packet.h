@@ -23,7 +23,8 @@ typedef struct
 
 extern const packet_meta_t PLTB[ENUM_LENGTH];
 
-typedef struct{
+typedef struct
+{
     packet_id_t id;
     uint8_t *payload;
     size_t packet_length;
@@ -31,6 +32,7 @@ typedef struct{
 
 typedef enum
 {
+    TESTING = 100,
     HEADER_OK = 1,
     PACKET_OK = 0,
     PACKET_INCOMPLETE = -1,
@@ -40,12 +42,10 @@ typedef enum
     NEED_DATA = -5
 } packet_status_t;
 
-
-
 int PKT_Assemble(client *cl);
 void PKT_Mmove(uint8_t *client_buffer, uint8_t *packet, size_t packet_len);
 int PKT_LengthCheck(size_t offset, size_t remaining_bytes, size_t size);
-int PKT_Parser(packet_t *packet);
+int PKT_Parser(packet_t *packet, client *sender);
 int PKT_Init(packet_t *packet, packet_id_t id, uint8_t *payload, size_t packet_length);
 int PKT_Length(uint8_t *client_buffer, uint8_t *packet_pointer, size_t *bytes_read_ptr, packet_id_t packet_id);
 #endif

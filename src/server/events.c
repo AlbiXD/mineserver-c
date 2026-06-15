@@ -89,7 +89,7 @@ int NEVENT_Read(client *cl)
             return -1;
         }
     }
-    printf("bytes_read=%lu\n", bytes_read);
+    // printf("bytes_read=%lu\n", bytes_read);
 
     if (n == 0)
     {
@@ -98,7 +98,7 @@ int NEVENT_Read(client *cl)
     }
 
     if (new_data){
-        printf("Assembling packet\n");
+        // printf("Assembling packet\n");
         rval = PKT_Assemble(cl);
 
     }
