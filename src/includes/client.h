@@ -6,31 +6,55 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
-
-
+#include "player.h"
 #define KB 1024
 #define MULTIPLE 1
 
-#define BUFFER_LENGTH KB * MULTIPLE
+#define BUFFER_LENGTH KB *MULTIPLE
 
 typedef struct server server;
 
 /*
  * Represents a single connected client. is_used is 0 for empty slots, non-zero for active ones.
  */
-typedef struct client {
-    int client_fd;                  /* socket file descriptor; meaningful only when is_used != 0 */
-    struct sockaddr_in client_addr; /* peer address, filled in by accept() */
-    int is_used;                    /* 0 = slot is empty, 1 = slot holds an active client */
-    int pfd_idx;                    /* index into the server's pfd_list array */
-    int idx;                        /* index into the server's clients array */
 
-    uint8_t client_buffer[BUFFER_LENGTH];
+typedef enum
+{
+    STATE_ERROR = -1
+}
+client_state_return_t;
+
+typedef enum
+{
+    CLIENT_EMPTY,
+    CLIENT_HANDSHAKE,
+    CLIENT_LOGIN,
+    CLIENT_PLAYING,
+    CLIENT_DISCONNECTED
+
+} client_state_t;
+
+typedef struct
+{
+    int fd;
+    struct sockaddr_in addr;
+
+    uint8_t buffer[BUFFER_LENGTH];
     size_t bytes_read;
 
-    char username[16];
     int packet_len;
 
+    int pfd_idx;
+} client_net_t;
+
+typedef struct client
+{
+    int is_used; /* 0 = slot is empty, 1 = slot holds an active client */
+    int idx;     /* index into the server's clients array */
+
+    client_net_t net;
+    client_state_t state;
+    player_t player;
 } client;
 
 /*

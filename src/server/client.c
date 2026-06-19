@@ -1,6 +1,6 @@
 #include "../includes/server.h"
 #include "../includes/client.h"
-
+#include "../includes/game.h"
 void CL_InitList(server *srv)
 {
     for (int i = 0; i < srv->max_players; i++)
@@ -9,7 +9,8 @@ void CL_InitList(server *srv)
         srv->pfd_list[i + 1].fd = -1;
         srv->pfd_list[i + 1].events = 0;
         srv->pfd_list[i + 1].revents = 0;
-        srv->clients[i].bytes_read = 0;
+        srv->clients[i].net.bytes_read = 0;
+        srv->clients[i].state = CLIENT_EMPTY;
     }
 }
 
@@ -25,12 +26,12 @@ int CL_OpenSlot(client *clients, int max_players)
 
 void CL_Add(server *srv, int client_fd, struct sockaddr_in client_address, int idx)
 {
-    srv->clients[idx].client_addr = client_address;
-    srv->clients[idx].client_fd = client_fd;
+    srv->clients[idx].net.addr = client_address;
+    srv->clients[idx].net.fd = client_fd;
     srv->clients[idx].is_used = 1;
-    srv->clients[idx].pfd_idx = idx + 1;
+    srv->clients[idx].net.pfd_idx = idx + 1;
     srv->clients[idx].idx = idx;
-
+    srv->clients[idx].state = CLIENT_HANDSHAKE;
     srv->pfd_list[idx + 1].fd = client_fd;
     srv->pfd_list[idx + 1].events = POLLIN | POLLHUP | POLLERR;
 }
@@ -46,7 +47,7 @@ void CL_CloseAll(server *srv)
     {
         if (srv->clients[i].is_used)
         {
-            close(srv->clients[i].client_fd);
+            close(srv->clients[i].net.fd);
             srv->clients[i].is_used = 0;
         }
     }

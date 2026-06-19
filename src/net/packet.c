@@ -1,51 +1,57 @@
 // This file will be responsible for assembling a packet
 #include "../includes/packet.h"
 #include "../includes/game.h"
-
+#include "../includes/bytes.h"
 // int packet_parser(client* cl, client_packet packet){
 
 // }
 
-const packet_meta_t PLTB[ENUM_LENGTH] = {
+const packet_meta_t PLTB[256] = {
     [LOGIN] = {LOGIN, 16, 6, 1},
-    [HANDSHAKE] = {HANDSHAKE, 3, 2, 1}};
+    [HANDSHAKE] = {HANDSHAKE, 3, 2, 1},
+    [POSITION] = {POSITION, 33, 0, 0},
+    [LOOK] = {LOOK, 9, 0, 0},
+    [POSITION_AND_LOOK] = {POSITION_AND_LOOK, 41, 41, 0}};
 
 int PKT_Assemble(client *cl)
 {
     packet_t packet;
 
-    uint8_t *client_buffer = cl->client_buffer;
-    uint8_t *packet_ptr = client_buffer + cl->packet_len;
+    uint8_t *client_buffer = cl->net.buffer;
+    uint8_t *packet_ptr = client_buffer + cl->net.packet_len;
     int size = 0;
-    size_t bytes_read = cl->bytes_read;
+    size_t bytes_read = cl->net.bytes_read;
     packet_status_t rval = PACKET_OK;
 
     while (1)
     {
-
         packet_ptr += size;
-        cl->packet_len = size;
         // printf("%lu", (size_t)(packet_ptr - client_buffer));
 
         if ((size_t)(packet_ptr - client_buffer) >= bytes_read)
         {
-            // printf("Need more data\n");
+            printf("data = %lu\n", (size_t)(packet_ptr - client_buffer));
+            printf("data_bytes_read=%lu\n", bytes_read);
+            printf("Need more data\n");
             return NEED_DATA;
         }
 
+        printf("packet_ptr=%p, size2=%d\n", packet_ptr, size);
         size = 0;
 
         printf("packet_id=%d\n", *packet_ptr);
-        // Array lookup table
-        if ((*packet_ptr) > ENUM_LENGTH)
+        if (PLTB[*packet_ptr].id == 0)
         {
-            printf("Unknown Packet Type");
-            return PACKET_ERROR;
+            printf("Unknown Packet Type\n");
+            return PACKET_UNSUPPORTED;
         }
 
-        if ((size = PKT_Length(client_buffer, packet_ptr, &cl->bytes_read, *packet_ptr)) < 0)
+        if ((size = PKT_Length(client_buffer, packet_ptr, &cl->net.bytes_read, *packet_ptr)) < 0)
+        {
             return size;
-
+        }
+        cl->net.packet_len += size;
+        printf("%d\n", cl->net.packet_len);
         PKT_Init(&packet, *packet_ptr, packet_ptr, size);
 
         rval = PKT_Parser(&packet, cl);
@@ -59,7 +65,7 @@ int PKT_Assemble(client *cl)
 */
 int PKT_Parser(packet_t *packet, client *sender)
 {
-    command_t cmd;
+    command_t cmd = {0};
     packet_id_t id = packet->id;
 
     switch (id)
@@ -86,15 +92,37 @@ int PKT_Parser(packet_t *packet, client *sender)
         printf("Login\n");
         break;
     }
+    case LOOK:
+    {
+        printf("LOOK\n");
+
+        break;
+    }
+
+    case POSITION:
+    {
+        printf("POSITION\n");
+        break;
+    }
+    case POSITION_AND_LOOK:
+    {
+        printf("POSITION_AND_LOOK\n");
+        uint32_t yaw = *(uint32_t *) (packet->payload + 33);
+        yaw = ntohl(yaw);
+        float YAW = *(float *)&yaw;
+        printf("%f\n", YAW);
+        break;
+    }
 
     default:
     {
         printf("Unknown Packet Type Cannot Parse\n");
-        return PACKET_ERROR;
+        return PACKET_UNSUPPORTED;
     }
     }
 
-    GAME_CommandHandler(&cmd);
+    if (GAME_CommandHandler(&cmd) < 0)
+        return PACKET_ERROR;
 
     return PACKET_OK;
 }
@@ -110,11 +138,11 @@ int PKT_Init(packet_t *packet, packet_id_t id, uint8_t *payload, size_t packet_l
 int PKT_Length(uint8_t *client_buffer, uint8_t *packet_pointer, size_t *bytes_read_ptr, packet_id_t packet_id)
 {
 
-    if (packet_id == 0 || packet_id > 0x2)
-    {
-        printf("Packet Not Finished Yet\n");
-        return PACKET_ERROR;
-    }
+    // if (packet_id == 0 || packet_id > 0x2)
+    // {
+    //     printf("Packet Not Finished Yet\n");
+    //     return PACKET_UNSUPPORTED;
+    // }
     size_t bytes_read = *bytes_read_ptr;
     size_t offset = packet_pointer - client_buffer;
     size_t remaining_bytes = bytes_read - offset;
@@ -136,7 +164,15 @@ int PKT_Length(uint8_t *client_buffer, uint8_t *packet_pointer, size_t *bytes_re
 
         return PACKET_INCOMPLETE; // need to change the 3 into enumerated type
     }
-    size = packet_pointer[PLTB[packet_id].sizeOffset] * 2 + size;
+
+    if (PLTB[packet_id].isSized)
+    {
+        size = packet_pointer[PLTB[packet_id].sizeOffset] * 2 + size;
+    }
+    else
+    {
+        size = PLTB[packet_id].minSize + 1;
+    }
 
     printf("size=%d\n", size);
     // Do we have the whole packet?

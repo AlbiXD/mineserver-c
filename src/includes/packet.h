@@ -3,14 +3,20 @@
 
 #include "client.h"
 #include <stdint.h>
+#include <arpa/inet.h>
+
 
 #define ENUM_LENGTH 3
 
 typedef enum
 {
-    KEEP_ALIVE = 0,
-    LOGIN = 1,
-    HANDSHAKE = 2
+    KEEP_ALIVE = 0x00,
+    LOGIN = 0x01,
+    HANDSHAKE = 0x02,
+    POSITION = 0x0B,
+    LOOK = 0x0C,
+    POSITION_AND_LOOK = 0x0D,
+    DISCONNECT = 0xFF
 } packet_id_t;
 
 typedef struct
@@ -21,7 +27,7 @@ typedef struct
     uint8_t isSized; // If this variable consists of a dynamic size
 } packet_meta_t;
 
-extern const packet_meta_t PLTB[ENUM_LENGTH];
+extern const packet_meta_t PLTB[256];
 
 typedef struct
 {
@@ -39,7 +45,8 @@ typedef enum
     PACKET_COMPACTED = -2,
     PACKET_ERROR = -3,
     BUFFER_CONSUMED = -4,
-    NEED_DATA = -5
+    NEED_DATA = -5,
+    PACKET_UNSUPPORTED = -6
 } packet_status_t;
 
 int PKT_Assemble(client *cl);

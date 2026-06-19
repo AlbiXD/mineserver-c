@@ -15,10 +15,24 @@ typedef struct
     uint8_t username[16];
 } cmd_client_login_t;
 
+typedef struct
+{
+    double X;
+    double Y;
+    double stance;
+    double Z;
+    double yaw;
+    double pitch;
+    uint8_t onGround;
+
+} cmd_client_position_t;
+
 typedef union
 {
     cmd_client_handshake_t handshake;
     cmd_client_login_t login;
+    cmd_client_position_t position;
+
 } game_command_t;
 
 typedef struct
