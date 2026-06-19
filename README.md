@@ -15,7 +15,7 @@ make
 ``` 
 Then you simply start the server by running 
 ```
-./server.out
+./server
 ```
 # Server Properties
 The server properties while still not at its final state has some relevant settings for the server
