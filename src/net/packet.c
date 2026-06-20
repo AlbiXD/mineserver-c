@@ -2,6 +2,7 @@
 #include "../includes/packet.h"
 #include "../includes/game.h"
 #include "../includes/bytes.h"
+#include "../includes/events.h"
 // int packet_parser(client* cl, client_packet packet){
 
 // }
@@ -9,9 +10,10 @@
 const packet_meta_t PLTB[256] = {
     [LOGIN] = {LOGIN, 16, 6, 1},
     [HANDSHAKE] = {HANDSHAKE, 3, 2, 1},
-    [POSITION] = {POSITION, 33, 0, 0},
-    [LOOK] = {LOOK, 9, 0, 0},
-    [POSITION_AND_LOOK] = {POSITION_AND_LOOK, 41, 41, 0}};
+    [POSITION] = {POSITION, 34, 0, 0},
+    [LOOK] = {LOOK, 10, 0, 0},
+    [POSITION_AND_LOOK] = {POSITION_AND_LOOK, 42, 0, 0},
+    [DISCONNECT] = {DISCONNECT, 3, 2, 1}};
 
 int PKT_Assemble(client *cl)
 {
@@ -39,7 +41,7 @@ int PKT_Assemble(client *cl)
         printf("packet_ptr=%p, size2=%d\n", packet_ptr, size);
         size = 0;
 
-        printf("packet_id=%d\n", *packet_ptr);
+        printf("packet_id=%ld\n", *packet_ptr);
         if (PLTB[*packet_ptr].id == 0)
         {
             printf("Unknown Packet Type\n");
@@ -54,7 +56,8 @@ int PKT_Assemble(client *cl)
         printf("%d\n", cl->net.packet_len);
         PKT_Init(&packet, *packet_ptr, packet_ptr, size);
 
-        rval = PKT_Parser(&packet, cl);
+        if ((rval = PKT_Parser(&packet, cl)) == PACKET_DISCONNECT)
+            return PACKET_DISCONNECT;
     }
 
     return rval;
@@ -95,23 +98,34 @@ int PKT_Parser(packet_t *packet, client *sender)
     case LOOK:
     {
         printf("LOOK\n");
-
         break;
     }
 
     case POSITION:
     {
-        printf("POSITION\n");
+
+        int off = 1;
+
+        double X = BYTES_ReadDouble(packet->payload, &off);
+        double Y = BYTES_ReadDouble(packet->payload, &off);
+        double stance = BYTES_ReadDouble(packet->payload, &off);
+        double Z = BYTES_ReadDouble(packet->payload, &off);
+        uint8_t on_ground = *(packet->payload + off + 1);
+
+        sender->player.position = (player_position_t){
+            X, Y, stance, Z, on_ground}; // Learned something new today compound literal
+
         break;
     }
     case POSITION_AND_LOOK:
     {
-        printf("POSITION_AND_LOOK\n");
-        uint32_t yaw = *(uint32_t *) (packet->payload + 33);
-        yaw = ntohl(yaw);
-        float YAW = *(float *)&yaw;
-        printf("%f\n", YAW);
+
         break;
+    }
+    case DISCONNECT:
+    {
+
+        return PACKET_DISCONNECT;
     }
 
     default:
@@ -171,7 +185,7 @@ int PKT_Length(uint8_t *client_buffer, uint8_t *packet_pointer, size_t *bytes_re
     }
     else
     {
-        size = PLTB[packet_id].minSize + 1;
+        size = PLTB[packet_id].minSize;
     }
 
     printf("size=%d\n", size);

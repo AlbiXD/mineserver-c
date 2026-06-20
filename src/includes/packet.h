@@ -46,7 +46,8 @@ typedef enum
     PACKET_ERROR = -3,
     BUFFER_CONSUMED = -4,
     NEED_DATA = -5,
-    PACKET_UNSUPPORTED = -6
+    PACKET_UNSUPPORTED = -6,
+    PACKET_DISCONNECT = -7
 } packet_status_t;
 
 int PKT_Assemble(client *cl);

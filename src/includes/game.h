@@ -21,17 +21,23 @@ typedef struct
     double Y;
     double stance;
     double Z;
-    double yaw;
-    double pitch;
+
     uint8_t onGround;
 
 } cmd_client_position_t;
 
-typedef union
+typedef struct
+{
+    double yaw;
+    double pitch;
+} cmd_client_look_t
+
+    typedef union
 {
     cmd_client_handshake_t handshake;
     cmd_client_login_t login;
     cmd_client_position_t position;
+    cmd_client_look_t position;
 
 } game_command_t;
 

@@ -55,15 +55,15 @@ int NEVENT_Read(client *cl)
     int n = 0;
     uint8_t new_data = 0;
     int r = 0;
-    int    rval = 0;
+    int rval = 0;
     while (1)
     {
 
-        //980 -> 1024  //BUFFER FULL
+        // 980 -> 1024  //BUFFER FULL
         if (bytes_read == BUFFER_LENGTH)
         {
-            printf("b_read=%d\n", bytes_read);
-            memmove(client_buffer, client_buffer+BUFFER_LENGTH-r, r);
+            printf("b_read=%ld\n", bytes_read);
+            memmove(client_buffer, client_buffer + BUFFER_LENGTH - r, r);
             bytes_read = r;
             printf("TRUE\n");
             cl->net.bytes_read = bytes_read;
@@ -72,7 +72,7 @@ int NEVENT_Read(client *cl)
         } // flush buffer?
 
         n = read(cl->net.fd, client_buffer + bytes_read, BUFFER_LENGTH - bytes_read); // Drain the read buffer until full then flush?
-    
+
         if (n > 0)
         {
             r = n;
@@ -103,8 +103,19 @@ int NEVENT_Read(client *cl)
 
     if (new_data)
     {
-        // printf("Assembling packet\n");
+    // printf("Assembling packet\n");
+    test: // This will get removed later I just need this as a crutch in order to bypass stuff
         rval = PKT_Assemble(cl);
+        printf("%d\n", rval);
+        if (rval == PACKET_UNSUPPORTED)
+        {
+            printf("Unsupported packet\n");
+            printf("%d\n", r);
+            cl->net.packet_len += 1;
+            goto test;
+        }
+        else if (rval == PACKET_DISCONNECT)
+            return PACKET_DISCONNECT;
     }
     if (rval == BUFFER_CONSUMED)
     {
@@ -138,14 +149,19 @@ void NEVENT_Handle(server *srv)
             pfd[i].fd = -1;
             printf("SERVER: Client is quitting?\n");
             NEVENT_Disconnect(srv, cl);
+            continue;
         }
 
         if (pfd[i].revents & POLLIN)
         {
             // Handle client data
             printf("SERVER: Received data from client on fd %d\n", pfd[i].fd);
-            if (NEVENT_Read(cl) == PACKET_ERROR)
+            int rval = 0;
+            if ((rval = NEVENT_Read(cl)) == PACKET_ERROR || rval == PACKET_DISCONNECT)
+            {
+                printf("rval=%d\n", rval);
                 NEVENT_Disconnect(srv, cl);
+            }
         }
     }
 }

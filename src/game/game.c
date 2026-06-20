@@ -23,12 +23,13 @@ int GAME_CommandHandler(command_t *cmd)
 
         write(fd, payload, sizeof(payload));
         printf("Wrote handshake packet\n");
+        sender->state = CLIENT_LOGIN;
         return 0;
     }
     case LOGIN:
     {
 
-        if (sender->state != LOGIN)
+        if (sender->state != CLIENT_LOGIN)
             return STATE_ERROR;
         printf("LOGIN\n");
         uint8_t payload[] = {

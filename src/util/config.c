@@ -55,7 +55,8 @@ void CFG_Parse(config *cfg)
     if (cfg->is_valid < CONFIG_OPTIONS)
     {
         printf("CONFIG: Config is missing fields regenerating from default...\n");
-        return CFG_DefaultConfig(cfg);
+        CFG_DefaultConfig(cfg);
+        return;
     }
 
     return;
@@ -69,7 +70,8 @@ void CFG_Init(config *cfg)
     if (access("server.properties", F_OK) != 0)
     {
         printf("CONFIG: Not found, generating new config...\n");
-        return CFG_DefaultConfig(cfg);
+        CFG_DefaultConfig(cfg);
+        return;
     }
 
     // If config exists parse

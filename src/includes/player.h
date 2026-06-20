@@ -9,19 +9,22 @@ typedef struct
     double Y;
     double stance;
     double Z;
-    double yaw;
-    double pitch;
     uint8_t onGround;
 
 } player_position_t;
 
 typedef struct
 {
+    double yaw;
+    double pitch;
+} player_look_t;
+
+typedef struct
+{
     uint8_t username[17];
     player_position_t position;
+    player_look_t look;
 
 } player_t;
-
-
 
 #endif
