@@ -14,9 +14,11 @@
 #include "socket.h"
 #include <sys/time.h>
 #include <time.h>
+#include "cmd_queue.h"
 #define BACKLOG 128
 
 typedef struct client client;
+
 
 typedef struct server
 {
@@ -27,6 +29,7 @@ typedef struct server
     int pollfd_index;               /* number of active entries in pfd_list */
     struct pollfd *pfd_list;        /* poll() fd array; index 0 is the listener */
     const config *cfg;              /* server configuration, owned by caller */
+    cmd_queue queue;
 } server;
 
 /*

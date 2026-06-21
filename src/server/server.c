@@ -10,7 +10,7 @@ int SV_Init(server *srv, const config *cfg)
     srv->max_players = cfg->max_players;                                    // Server max players
     srv->clients = malloc(sizeof(client) * cfg->max_players);               // Initialize the client list
     srv->pfd_list = malloc(sizeof(struct pollfd) * (srv->max_players + 1)); // Initialize the pollfd list
-
+    srv->queue = (cmd_queue){0};
     if ((srv->server_fd = SOCKET_CreateListening(srv)) < 0)
         return -1; // Remove line maybe
 
@@ -82,6 +82,7 @@ int SV_Start(server *srv)
         {
             ticks++;
             timeout = 50;
+            GAME_Tick(&srv->queue);
         }
 
         if (ticks == 20)

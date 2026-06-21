@@ -15,7 +15,7 @@ const packet_meta_t PLTB[256] = {
     [POSITION_AND_LOOK] = {POSITION_AND_LOOK, 42, 0, 0},
     [DISCONNECT] = {DISCONNECT, 3, 2, 1}};
 
-int PKT_Assemble(client *cl)
+int PKT_Assemble(client *cl, cmd_queue *queue)
 {
     packet_t packet;
 
@@ -56,7 +56,7 @@ int PKT_Assemble(client *cl)
         printf("%d\n", cl->net.packet_len);
         PKT_Init(&packet, *packet_ptr, packet_ptr, size);
 
-        if ((rval = PKT_Parser(&packet, cl)) == PACKET_DISCONNECT)
+        if ((rval = PKT_Parser(&packet, cl, queue)) == PACKET_DISCONNECT)
             return PACKET_DISCONNECT;
     }
 
@@ -66,9 +66,9 @@ int PKT_Assemble(client *cl)
 /*
     Packet Validation -> sends packet to command constructor?
 */
-int PKT_Parser(packet_t *packet, client *sender)
+int PKT_Parser(packet_t *packet, client *sender, cmd_queue *queue)
 {
-    command_t cmd = {0};
+    game_command_t *cmd = malloc(sizeof(game_command_t));
     packet_id_t id = packet->id;
 
     switch (id)
@@ -79,21 +79,22 @@ int PKT_Parser(packet_t *packet, client *sender)
         int idx = 0;
         for (size_t i = 4; i < packet->packet_length; i += 2)
         {
-            cmd.command.handshake.username[idx++] = packet->payload[i];
+            cmd->payload.handshake.username[idx++] = packet->payload[i];
         }
-        cmd.command.handshake.username[idx] = '\0';
-        cmd.id = HANDSHAKE;
-        cmd.sender = sender;
+
+        cmd->payload.handshake.username[idx] = '\0';
+        cmd->id = HANDSHAKE;
+        cmd->sender = sender;
         printf("Parsing Handshake\n");
-        break;
+        return GAME_Handshake(cmd);
     }
     case LOGIN:
     {
-        cmd.command.login.username[0] = '\0';
-        cmd.id = LOGIN;
-        cmd.sender = sender;
+        cmd->payload.login.username[0] = '\0';
+        cmd->id = LOGIN;
+        cmd->sender = sender;
         printf("Login\n");
-        break;
+        return GAME_Login(cmd);
     }
     case LOOK:
     {
@@ -112,9 +113,9 @@ int PKT_Parser(packet_t *packet, client *sender)
         double Z = BYTES_ReadDouble(packet->payload, &off);
         uint8_t on_ground = *(packet->payload + off + 1);
 
-        sender->player.position = (player_position_t){
-            X, Y, stance, Z, on_ground}; // Learned something new today compound literal
-
+        cmd->id = POSITION;
+        cmd->payload.position = (cmd_client_position_t){X, Y, stance, Z, on_ground};
+        cmd->sender = sender;
         break;
     }
     case POSITION_AND_LOOK:
@@ -135,8 +136,7 @@ int PKT_Parser(packet_t *packet, client *sender)
     }
     }
 
-    if (GAME_CommandHandler(&cmd) < 0)
-        return PACKET_ERROR;
+    CMDQ_Push(queue, cmd);
 
     return PACKET_OK;
 }

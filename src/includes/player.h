@@ -9,7 +9,6 @@ typedef struct
     double Y;
     double stance;
     double Z;
-    uint8_t onGround;
 
 } player_position_t;
 
@@ -24,7 +23,7 @@ typedef struct
     uint8_t username[17];
     player_position_t position;
     player_look_t look;
-
+    uint8_t on_ground;
 } player_t;
 
 #endif

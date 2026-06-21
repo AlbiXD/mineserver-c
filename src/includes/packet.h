@@ -4,8 +4,7 @@
 #include "client.h"
 #include <stdint.h>
 #include <arpa/inet.h>
-
-
+#include "cmd_queue.h"
 #define ENUM_LENGTH 3
 
 typedef enum
@@ -50,10 +49,10 @@ typedef enum
     PACKET_DISCONNECT = -7
 } packet_status_t;
 
-int PKT_Assemble(client *cl);
+int PKT_Assemble(client *cl, cmd_queue *queue);
 void PKT_Mmove(uint8_t *client_buffer, uint8_t *packet, size_t packet_len);
 int PKT_LengthCheck(size_t offset, size_t remaining_bytes, size_t size);
-int PKT_Parser(packet_t *packet, client *sender);
+int PKT_Parser(packet_t *packet, client *sender, cmd_queue *queue);
 int PKT_Init(packet_t *packet, packet_id_t id, uint8_t *payload, size_t packet_length);
 int PKT_Length(uint8_t *client_buffer, uint8_t *packet_pointer, size_t *bytes_read_ptr, packet_id_t packet_id);
 #endif
