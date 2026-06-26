@@ -2,7 +2,7 @@
 
 An experimental Minecraft Beta 1.7.3-compatible server written in C.
 <p align="center">
-  <img width="852" height="512" alt="image" src="https://github.com/user-attachments/assets/f702be85-c578-4f82-9821-59ddb60d8a70" />
+<img width="852" height="514" alt="image" src="https://github.com/user-attachments/assets/4c44241c-596b-4e38-bc38-a27dc92376aa" />
 </p>
 ## Design 
 <img width="2202" height="1025" alt="Design" src="https://github.com/user-attachments/assets/28a0f01a-e04b-4c38-a165-38ec1fc73cb8" />
