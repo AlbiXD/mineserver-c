@@ -32,7 +32,7 @@ int SV_Init(server *srv, const config *cfg)
     CL_InitList(srv); // Initializes the client list + pollfd list
 
     printf("SERVER: Starting on IP %s\n", cfg->ip_address);
-    printf("SERVER:  Running on PORT %hu\n", cfg->port);
+    printf("SERVER: Running on PORT %hu\n", cfg->port);
     printf("SERVER: Server initialized!\n");
 
     return 0;
@@ -85,6 +85,14 @@ int SV_Start(server *srv)
             ticks++;
             timeout = 50;
             GAME_Tick(&srv->queue);
+
+            for (int i = 0; i < srv->max_players; i++)
+            {
+                if (srv->clients[i].is_used == 0)
+                    continue;
+                game_command_t cmd = (game_command_t){.id = 0x0, .sender = &srv->clients[i]};
+                GAME_KeepAlive(&cmd);
+            }
         }
 
         if (ticks == 20)

@@ -13,7 +13,8 @@ const packet_meta_t PLTB[256] = {
     [POSITION] = {POSITION, 34, 0, 0},
     [LOOK] = {LOOK, 10, 0, 0},
     [POSITION_AND_LOOK] = {POSITION_AND_LOOK, 42, 0, 0},
-    [DISCONNECT] = {DISCONNECT, 3, 2, 1}};
+    [DISCONNECT] = {DISCONNECT, 3, 2, 1},
+    [KEEP_ALIVE] = {KEEP_ALIVE, 1, 0, 0}};
 
 int PKT_Assemble(client *cl, cmd_queue *queue)
 {
@@ -32,16 +33,16 @@ int PKT_Assemble(client *cl, cmd_queue *queue)
 
         if ((size_t)(packet_ptr - client_buffer) >= bytes_read)
         {
-            printf("data = %lu\n", (size_t)(packet_ptr - client_buffer));
-            printf("data_bytes_read=%lu\n", bytes_read);
-            printf("Need more data\n");
+            // printf("data = %lu\n", (size_t)(packet_ptr - client_buffer));
+            // printf("data_bytes_read=%lu\n", bytes_read);
+            // printf("Need more data\n");
             return NEED_DATA;
         }
 
-        printf("packet_ptr=%p, size2=%d\n", packet_ptr, size);
+        // printf("packet_ptr=%p, size2=%d\n", packet_ptr, size);
         size = 0;
 
-        printf("packet_id=%ld\n", *packet_ptr);
+        // printf("packet_id=%ld\n", *packet_ptr);
         if (PLTB[*packet_ptr].id == 0)
         {
             printf("Unknown Packet Type\n");
@@ -49,11 +50,10 @@ int PKT_Assemble(client *cl, cmd_queue *queue)
         }
 
         if ((size = PKT_Length(client_buffer, packet_ptr, &cl->net.bytes_read, *packet_ptr)) < 0)
-        {
             return size;
-        }
+
         cl->net.packet_len += size;
-        printf("%d\n", cl->net.packet_len);
+        // printf("%d\n", cl->net.packet_len);
         PKT_Init(&packet, *packet_ptr, packet_ptr, size);
 
         if ((rval = PKT_Parser(&packet, cl, queue)) == PACKET_DISCONNECT)
@@ -120,12 +120,10 @@ int PKT_Parser(packet_t *packet, client *sender, cmd_queue *queue)
     }
     case POSITION_AND_LOOK:
     {
-
-        break;
+        return 0;
     }
     case DISCONNECT:
     {
-
         return PACKET_DISCONNECT;
     }
 
@@ -162,8 +160,8 @@ int PKT_Length(uint8_t *client_buffer, uint8_t *packet_pointer, size_t *bytes_re
     size_t offset = packet_pointer - client_buffer;
     size_t remaining_bytes = bytes_read - offset;
     int size = PLTB[packet_id].minSize;
-    printf("offset=%td, size=%d\n", offset, size); // We have consumed all bytes
-    printf("remaining_bytes=%d, bytes_read=%d\n", remaining_bytes, bytes_read);
+    // printf("offset=%td, size=%d\n", offset, size); // We have consumed all bytes
+    // printf("remaining_bytes=%d, bytes_read=%d\n", remaining_bytes, bytes_read);
 
     int r = 0;
 
@@ -189,7 +187,7 @@ int PKT_Length(uint8_t *client_buffer, uint8_t *packet_pointer, size_t *bytes_re
         size = PLTB[packet_id].minSize;
     }
 
-    printf("size=%d\n", size);
+    // printf("size=%d\n", size);
     // Do we have the whole packet?
     if ((r = PKT_LengthCheck(offset, remaining_bytes, size)) == BUFFER_CONSUMED)
     {
@@ -200,7 +198,7 @@ int PKT_Length(uint8_t *client_buffer, uint8_t *packet_pointer, size_t *bytes_re
     else if (r == PACKET_INCOMPLETE)
         return PACKET_INCOMPLETE; // need to change the 3 into enumerated type
 
-    printf("We have the full packet %02x, size=%d\n", packet_id, size);
+    // printf("We have the full packet %02x, size=%d\n", packet_id, size);
     return size;
 }
 

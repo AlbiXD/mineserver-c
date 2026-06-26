@@ -40,12 +40,11 @@ void NEVENT_Disconnect(server *srv, client *cl)
     printf("Disconnect event\n");
     struct pollfd *pfd = srv->pfd_list;
     close(cl->net.fd);
+    pfd[cl->net.pfd_idx].fd = -1;
 
     *cl = (client){
         .state = CLIENT_EMPTY,
     };
-
-    pfd[cl->net.pfd_idx].fd = -1;
 }
 
 int NEVENT_Read(client *cl, cmd_queue *queue)
@@ -108,11 +107,11 @@ int NEVENT_Read(client *cl, cmd_queue *queue)
     // printf("Assembling packet\n");
     test: // This will get removed later I just need this as a crutch in order to bypass stuff
         rval = PKT_Assemble(cl, queue);
-        printf("%d\n", rval);
+        // printf("%d\n", rval);
         if (rval == PACKET_UNSUPPORTED)
         {
             printf("Unsupported packet\n");
-            printf("%d\n", r);
+            // printf("%d\n", r);
             cl->net.packet_len += 1;
             goto test;
         }
@@ -157,11 +156,11 @@ void NEVENT_Handle(server *srv)
         if (pfd[i].revents & POLLIN)
         {
             // Handle client data
-            printf("SERVER: Received data from client on fd %d\n", pfd[i].fd);
+            // printf("SERVER: Received data from client on fd %d\n", pfd[i].fd);
             int rval = 0;
             if ((rval = NEVENT_Read(cl, &srv->queue)) == PACKET_ERROR || rval == PACKET_DISCONNECT)
             {
-                printf("rval=%d\n", rval);
+                // printf("rval=%d\n", rval);
                 NEVENT_Disconnect(srv, cl);
             }
         }

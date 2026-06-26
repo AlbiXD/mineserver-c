@@ -49,5 +49,6 @@ typedef struct
 int GAME_Tick(cmd_queue *queue);
 int GAME_Login(game_command_t *cmd);
 int GAME_Handshake(game_command_t *cmd);
+int GAME_KeepAlive(game_command_t *cmd);
 
 #endif

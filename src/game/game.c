@@ -9,7 +9,7 @@ int GAME_Tick(cmd_queue *queue)
     game_command_t *cmd;
     while ((cmd = CMDQ_Pop(queue)) != NULL)
     {
-        printf("POP goes the Weasel cmd=%d!\n", cmd->id);
+        // printf("POP goes the Weasel cmd=%d!\n", cmd->id);
         free(cmd);
     }
 
@@ -31,7 +31,12 @@ int GAME_Handshake(game_command_t *cmd)
     free(cmd);
     return 0;
 }
-
+int GAME_KeepAlive(game_command_t *cmd)
+{
+    uint8_t byte = 0x0;
+    write(cmd->sender->net.fd, &byte, sizeof(byte));
+    return 0;
+}
 int GAME_Login(game_command_t *cmd)
 {
     client *sender = cmd->sender;
