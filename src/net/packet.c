@@ -143,9 +143,10 @@ int PKT_Parser(packet_t *packet, client *sender, cmd_queue *queue)
 
 int PKT_Init(packet_t *packet, packet_id_t id, uint8_t *payload, size_t packet_length)
 {
-    packet->id = id;
-    packet->payload = payload;
-    packet->packet_length = packet_length;
+    *packet = (packet_t){
+        .id = id,
+        .payload = payload,
+        .packet_length = packet_length};
     return PACKET_OK;
 }
 

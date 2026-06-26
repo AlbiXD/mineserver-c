@@ -39,11 +39,13 @@ void NEVENT_Disconnect(server *srv, client *cl)
 {
     printf("Disconnect event\n");
     struct pollfd *pfd = srv->pfd_list;
-    cl->net.packet_len = 0;
-    pfd[cl->net.pfd_idx].fd = -1;
-    cl->net.bytes_read = 0;
-    cl->is_used = 0;
     close(cl->net.fd);
+
+    *cl = (client){
+        .state = CLIENT_EMPTY,
+    };
+
+    pfd[cl->net.pfd_idx].fd = -1;
 }
 
 int NEVENT_Read(client *cl, cmd_queue *queue)

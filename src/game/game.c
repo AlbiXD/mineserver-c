@@ -7,7 +7,8 @@ int GAME_Tick(cmd_queue *queue)
 {
 
     game_command_t *cmd;
-    while((cmd = CMDQ_Pop(queue)) != NULL){
+    while ((cmd = CMDQ_Pop(queue)) != NULL)
+    {
         printf("POP goes the Weasel cmd=%d!\n", cmd->id);
         free(cmd);
     }
@@ -53,6 +54,11 @@ int GAME_Login(game_command_t *cmd)
     write(fd, payload, 16);
     printf("Wrote login packet\n");
 
+    // send pre chunk
+
+    // send chunk
+    uint8_t chunk[16 * 128 * 16];
+
     unsigned char pkt_poslook[] = {
         0x0D,
 
@@ -82,6 +88,7 @@ int GAME_Login(game_command_t *cmd)
         0x00};
 
     write(fd, pkt_poslook, sizeof(pkt_poslook));
+
     free(cmd);
     return 0;
 }

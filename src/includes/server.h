@@ -19,7 +19,6 @@
 
 typedef struct client client;
 
-
 typedef struct server
 {
     int server_fd;                  /* listening socket */

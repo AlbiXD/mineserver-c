@@ -4,8 +4,10 @@ CFLAGS = -g -Wall -Wextra -O2 -Iinclude -Wpedantic
 SRC := $(shell find src -name "*.c")
 OBJ := $(patsubst src/%.c,build/%.o,$(SRC))
 
+LDLIBS = -lz
+
 server: $(OBJ)
-	$(CC) $(OBJ) -o $@
+	$(CC) $(OBJ) -o $@ $(LDLIBS)
 
 build/%.o: src/%.c
 	mkdir -p $(dir $@)

@@ -6,13 +6,16 @@
 int SV_Init(server *srv, const config *cfg)
 {
 
-    srv->cfg = cfg;                                                         // Point to config in main
-    srv->max_players = cfg->max_players;                                    // Server max players
-    srv->clients = malloc(sizeof(client) * cfg->max_players);               // Initialize the client list
-    srv->pfd_list = malloc(sizeof(struct pollfd) * (srv->max_players + 1)); // Initialize the pollfd list
-    srv->queue = (cmd_queue){0};
+    *srv = (server){
+        .cfg = cfg,
+        .max_players = cfg->max_players,
+        .clients = malloc(sizeof(client) * cfg->max_players),
+        .pfd_list = malloc(sizeof(struct pollfd) * (cfg->max_players + 1)),
+        .queue = {0},
+    };
+
     if ((srv->server_fd = SOCKET_CreateListening(srv)) < 0)
-        return -1; // Remove line maybe
+        return -1;
 
     if (!srv->clients)
     {
@@ -29,7 +32,7 @@ int SV_Init(server *srv, const config *cfg)
     CL_InitList(srv); // Initializes the client list + pollfd list
 
     printf("SERVER: Starting on IP %s\n", cfg->ip_address);
-    printf("SERVER: Running on PORT %hu\n", cfg->port);
+    printf("SERVER:  Running on PORT %hu\n", cfg->port);
     printf("SERVER: Server initialized!\n");
 
     return 0;
@@ -42,9 +45,8 @@ int SV_Start(server *srv)
     struct pollfd *pfd = srv->pfd_list;
 
     // Listening socket / server socket poll
-    pfd[0].fd = srv->server_fd;
-    pfd[0].events = POLLIN | POLLHUP | POLLERR;
-    pfd[0].revents = 0;
+    pfd[0] = (struct pollfd){.fd = srv->server_fd, .events = POLLIN | POLLHUP | POLLERR};
+
     int n_pfd = srv->max_players + 1;
     int pret = 0;
 
