@@ -104,16 +104,12 @@ int NEVENT_Read(client *cl, cmd_queue *queue)
 
     if (new_data)
     {
-    // printf("Assembling packet\n");
-    test: // This will get removed later I just need this as a crutch in order to bypass stuff
+        // printf("Assembling packet\n");
         rval = PKT_Assemble(cl, queue);
         // printf("%d\n", rval);
         if (rval == PACKET_UNSUPPORTED)
         {
-            printf("Unsupported packet\n");
-            // printf("%d\n", r);
-            cl->net.packet_len += 1;
-            goto test;
+            return PACKET_ERROR;
         }
         else if (rval == PACKET_DISCONNECT)
             return PACKET_DISCONNECT;

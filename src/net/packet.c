@@ -42,11 +42,11 @@ int PKT_Assemble(client *cl, cmd_queue *queue)
         // printf("packet_ptr=%p, size2=%d\n", packet_ptr, size);
         size = 0;
 
-        // printf("packet_id=%ld\n", *packet_ptr);
+        printf("packet_id=%ld\n", *packet_ptr);
         if (PLTB[*packet_ptr].id == 0)
         {
             printf("Unknown Packet Type\n");
-            return PACKET_UNSUPPORTED;
+            return 0;
         }
 
         if ((size = PKT_Length(client_buffer, packet_ptr, &cl->net.bytes_read, *packet_ptr)) < 0)

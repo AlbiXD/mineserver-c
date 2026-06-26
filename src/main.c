@@ -3,7 +3,6 @@
 #include "./includes/server.h"
 #include "./includes/client.h"
 
-
 int main()
 {
     config cfg;
@@ -16,12 +15,10 @@ int main()
     if (SV_Init(&srv, &cfg) < 0)
         return -1;
 
-
     SV_Start(&srv); // Enters main server loop
-
 
     SV_Stop(&srv);
 
-    //Destroy server
+    // Destroy server
     return 0;
 }
