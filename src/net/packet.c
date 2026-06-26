@@ -77,22 +77,22 @@ int PKT_Parser(packet_t *packet, client *sender, cmd_queue *queue)
     case HANDSHAKE:
     {
         int idx = 0;
+
+        *cmd = (game_command_t){.id = HANDSHAKE, .sender = sender};
+
         for (size_t i = 4; i < packet->packet_length; i += 2)
         {
             cmd->payload.handshake.username[idx++] = packet->payload[i];
         }
 
         cmd->payload.handshake.username[idx] = '\0';
-        cmd->id = HANDSHAKE;
-        cmd->sender = sender;
+
         printf("Parsing Handshake\n");
         return GAME_Handshake(cmd);
     }
     case LOGIN:
     {
-        cmd->payload.login.username[0] = '\0';
-        cmd->id = LOGIN;
-        cmd->sender = sender;
+        *cmd = (game_command_t){.id = LOGIN, .sender = sender};
         printf("Login\n");
         return GAME_Login(cmd);
     }

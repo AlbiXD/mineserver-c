@@ -5,11 +5,7 @@ void CL_InitList(server *srv)
 {
     for (int i = 0; i < srv->max_players; i++)
     {
-
-        srv->pfd_list[i + 1].fd = -1;
-        srv->pfd_list[i + 1].events = 0;
-        srv->pfd_list[i + 1].revents = 0;
-
+        srv->pfd_list[i + 1] = (struct pollfd){.fd = -1};
         srv->clients[i] = (client){.state = CLIENT_EMPTY};
     }
 }
@@ -38,8 +34,7 @@ void CL_Add(server *srv, int client_fd, struct sockaddr_in client_address, int i
         },
     };
 
-    srv->pfd_list[idx + 1].fd = client_fd;
-    srv->pfd_list[idx + 1].events = POLLIN | POLLHUP | POLLERR;
+    (srv->pfd_list[idx + 1]) = (struct pollfd){.fd = client_fd, .events = POLLIN | POLLHUP | POLLERR};
 }
 
 void CL_Reject(int client_fd)
@@ -54,7 +49,7 @@ void CL_CloseAll(server *srv)
         if (srv->clients[i].is_used)
         {
             close(srv->clients[i].net.fd);
-            srv->clients[i].is_used = 0;
+            srv->clients[i] = (client){0};
         }
     }
 }
