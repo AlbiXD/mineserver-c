@@ -11,7 +11,6 @@ int SV_Init(server *srv, const config *cfg)
         .max_players = cfg->max_players,
         .clients = malloc(sizeof(client) * cfg->max_players),
         .pfd_list = malloc(sizeof(struct pollfd) * (cfg->max_players + 1)),
-        .queue = {0},
     };
 
     if ((srv->server_fd = SOCKET_CreateListening(srv)) < 0)
