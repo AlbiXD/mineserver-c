@@ -233,32 +233,37 @@ int GAME_Login(server *srv, game_command_t *cmd)
 
     write(fd, pkt_poslook, sizeof(pkt_poslook));
 
+    uint8_t *pkt = malloc(60);
+
     // Draw player on initial log in
     for (int i = 0; i < srv->max_players; i++)
     {
         if (!srv->clients[i].is_used) // Not used
             continue;
 
-        if (i == sender->idx) // Make sure not to write the current person i guess
+        if (&srv->clients[i] == sender) // Make sure not to write the current person i guess
             continue;
 
         uint8_t name[8] = "Client";
         // 0-7
         name[6] = 0x30 + sender->player.entity_id;
-        int pkt_len = 0;
-        uint8_t *pkt = GAME_DrawEntity(name, sizeof(name), sender, &pkt_len);
+        int pkt_len = GAME_DrawEntity(pkt, name, sizeof(name), sender, &pkt_len);
+
         write(srv->clients[i].net.fd, pkt, pkt_len);
-        free(pkt);
+
+        name[6] = 0x30 + srv->clients->player.entity_id;
+        pkt_len = GAME_DrawEntity(pkt, name, sizeof(name), &srv->clients[i], &pkt_len);
+        write(sender->net.fd, pkt, pkt_len);
     }
+
+    free(pkt);
     free(cmd);
     return 0;
 }
 
-uint8_t *GAME_DrawEntity(uint8_t *name, int16_t name_len, client *sender, int *pkt_len)
+int GAME_DrawEntity(uint8_t *pkt_named_entity, uint8_t *name, int16_t name_len, client *sender, int *pkt_len)
 {
     int pkt_size = (name_len * 2) + 23;
-
-    uint8_t *pkt_named_entity = malloc(pkt_size);
 
     int32_t eid = htonl(sender->player.entity_id);
     int32_t x = htonl((int32_t)(sender->player.loc.position.X * 32.0));
@@ -278,15 +283,6 @@ uint8_t *GAME_DrawEntity(uint8_t *name, int16_t name_len, client *sender, int *p
 
     memcpy(pkt_named_entity + off, &name_len, 2);
     off += 2;
-
-    // pkt_named_entity[off++] = 0x00; 0
-    // pkt_named_entity[off++] = 'A'; 1
-    // pkt_named_entity[off++] = 0x00; 2
-    // pkt_named_entity[off++] = 'l'; 3
-    // pkt_named_entity[off++] = 0x00; 4
-    // pkt_named_entity[off++] = 'b'; 5
-    // pkt_named_entity[off++] = 0x00; 6
-    // pkt_named_entity[off++] = (uint8_t)('A' + sender->player.entity_id); 7
 
     int idx = 0;
     for (int i = 0; i < len * 2; i++)
@@ -316,5 +312,5 @@ uint8_t *GAME_DrawEntity(uint8_t *name, int16_t name_len, client *sender, int *p
     off += 2;
 
     *pkt_len = pkt_size;
-    return pkt_named_entity;
+    return pkt_size;
 }

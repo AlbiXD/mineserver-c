@@ -51,6 +51,6 @@ int GAME_Tick(cmd_queue *queue, server *srv);
 int GAME_Login(server *srv, game_command_t *cmd);
 int GAME_Handshake(game_command_t *cmd);
 int GAME_KeepAlive(game_command_t *cmd);
-uint8_t *GAME_DrawEntity(uint8_t *name, int16_t name_len, client *sender, int *pkt_len);
+int GAME_DrawEntity(uint8_t *pkt_named_entity, uint8_t *name, int16_t name_len, client *sender, int *pkt_len);
 
 #endif
