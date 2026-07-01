@@ -9,7 +9,7 @@ typedef struct cmd_queue cmd_queue;
 
 void NEVENT_Handle(server *srv);
 int NEVENT_Accept(server *srv);
-int NEVENT_Read(client *cl, cmd_queue* queue);
+int NEVENT_Read(server *srv, client *cl, cmd_queue *queue);
 void NEVENT_Disconnect(server *srv, client *cl);
 
 #endif

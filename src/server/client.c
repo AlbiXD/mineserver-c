@@ -1,6 +1,9 @@
 #include "../includes/server.h"
 #include "../includes/client.h"
 #include "../includes/game.h"
+
+int global_id = 0;
+
 void CL_InitList(server *srv)
 {
     for (int i = 0; i < srv->max_players; i++)

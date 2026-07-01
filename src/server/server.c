@@ -84,7 +84,7 @@ int SV_Start(server *srv)
         {
             ticks++;
             timeout = 50;
-            GAME_Tick(&srv->queue);
+            GAME_Tick(&srv->queue, srv);
 
             for (int i = 0; i < srv->max_players; i++)
             {

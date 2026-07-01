@@ -2,14 +2,68 @@
 #include "../includes/packet.h"
 #include "../includes/client.h"
 #include "../includes/cmd_queue.h"
+#include "../includes/server.h"
 #include <zlib.h>
-int GAME_Tick(cmd_queue *queue)
+
+int GAME_Tick(cmd_queue *queue, server *srv)
 {
 
     game_command_t *cmd;
     while ((cmd = CMDQ_Pop(queue)) != NULL)
     {
-        // printf("POP goes the Weasel cmd=%d!\n", cmd->id);
+        int cmd_id = cmd->id;
+        client *sender = cmd->sender;
+        switch (cmd_id)
+        {
+        case POSITION:
+        {
+            player_location_t dL = {
+                .position = {
+                    .X = cmd->payload.position.X,
+                    .Y = cmd->payload.position.Y,
+                    .Z = cmd->payload.position.Z,
+                    .stance = cmd->payload.position.stance},
+                .on_ground = cmd->payload.position.onGround,
+                .look = sender->player.loc.look};
+
+            double dX = sender->player.loc.position.X;
+            double dY = sender->player.loc.position.Y;
+            double dZ = sender->player.loc.position.Z;
+            double dStance = sender->player.loc.position.stance;
+
+            sender->player.loc = dL;
+
+            int dx = (int)(sender->player.loc.position.X * 32) - (int)(dX * 32);
+            int dy = (int)(sender->player.loc.position.Y * 32) - (int)(dY * 32);
+            int dz = (int)(sender->player.loc.position.Z * 32) - (int)(dZ * 32);
+
+            // printf("dx=%d, dy=%d, dz=%d\n", dx, dy, dz);
+            // Client seems to be falling through the block? check if we are touching ground?
+
+            int32_t eid = htonl(sender->player.entity_id);
+
+            uint8_t pkt_entity_move[8];
+            pkt_entity_move[0] = 0x1F;
+            memmove(pkt_entity_move + 1, &eid, sizeof(int32_t));
+            pkt_entity_move[5] = (int8_t)dx;
+            pkt_entity_move[6] = (int8_t)dy;
+            pkt_entity_move[7] = (int8_t)dz;
+
+            for (int i = 0; i < srv->max_players; i++)
+            {
+                if (!srv->clients[i].is_used)
+                    continue;
+
+                if (srv->clients[i].idx == sender->idx)
+                    continue;
+
+                printf("entity_moving = %d\n", sender->player.entity_id);
+                write(srv->clients[i].net.fd, pkt_entity_move, 8);
+                printf("Wrote to other entity = %d\n", srv->clients->player.entity_id);
+            }
+            break;
+        }
+        }
         free(cmd);
     }
 
@@ -37,24 +91,36 @@ int GAME_KeepAlive(game_command_t *cmd)
     write(cmd->sender->net.fd, &byte, sizeof(byte));
     return 0;
 }
-int GAME_Login(game_command_t *cmd)
+int GAME_Login(server *srv, game_command_t *cmd)
 {
     client *sender = cmd->sender;
     int fd = sender->net.fd;
 
     if (sender->state != CLIENT_LOGIN)
         return STATE_ERROR;
+
     printf("LOGIN\n");
+
+    sender->player.entity_id = global_id++;
+    printf("assigned entity=%d global_id now=%d\n",
+           sender->player.entity_id,
+           global_id);
+
     uint8_t payload[] = {
         0x01,
 
-        0x00, 0x00, 0x05, 0x12,
+        // entity id placeholder
+        0x00, 0x00, 0x00, 0x00,
 
         0x00, 0x00,
 
-        0x0D, 0x7C, 0x58, 0xD8, 0x8C, 0x4A, 0x91, 0xA,
+        0x0D, 0x7C, 0x58, 0xD8, 0x8C, 0x4A, 0x91, 0x0A,
 
         0x00};
+
+    int32_t eid_net = htonl(sender->player.entity_id);
+
+    memcpy(&payload[1], &eid_net, sizeof(eid_net));
 
     write(fd, payload, 16);
     printf("Wrote login packet\n");
@@ -128,6 +194,15 @@ int GAME_Login(game_command_t *cmd)
 
     write(fd, pkt_chunk, max_compressed + 18);
 
+    sender->player.loc.position = (player_position_t){
+        .X = 14.0,
+        .Y = 128.0,
+        .Z = 12.0};
+
+    sender->player.loc.position.stance = sender->player.loc.position.Y + 1.62;
+
+    sender->player.loc.on_ground = 1;
+
     unsigned char pkt_poslook[] = {
         0x0D,
 
@@ -154,10 +229,92 @@ int GAME_Login(game_command_t *cmd)
         0x00, 0x00, 0x00, 0x00,
 
         // OnGround
-        0x00};
+        0x01};
 
     write(fd, pkt_poslook, sizeof(pkt_poslook));
 
+    // Draw player on initial log in
+    for (int i = 0; i < srv->max_players; i++)
+    {
+        if (!srv->clients[i].is_used) // Not used
+            continue;
+
+        if (i == sender->idx) // Make sure not to write the current person i guess
+            continue;
+
+        uint8_t name[8] = "Client";
+        // 0-7
+        name[6] = 0x30 + sender->player.entity_id;
+        int pkt_len = 0;
+        uint8_t *pkt = GAME_DrawEntity(name, sizeof(name), sender, &pkt_len);
+        write(srv->clients[i].net.fd, pkt, pkt_len);
+        free(pkt);
+    }
     free(cmd);
     return 0;
+}
+
+uint8_t *GAME_DrawEntity(uint8_t *name, int16_t name_len, client *sender, int *pkt_len)
+{
+    int pkt_size = (name_len * 2) + 23;
+
+    uint8_t *pkt_named_entity = malloc(pkt_size);
+
+    int32_t eid = htonl(sender->player.entity_id);
+    int32_t x = htonl((int32_t)(sender->player.loc.position.X * 32.0));
+    int32_t y = htonl((int32_t)(sender->player.loc.position.Y * 32.0));
+    int32_t z = htonl((int32_t)(sender->player.loc.position.Z * 32.0));
+    int len = name_len;
+    name_len = htons(name_len);
+
+    int16_t item = htons(0);
+
+    int off = 0;
+
+    pkt_named_entity[off++] = 0x14;
+
+    memcpy(pkt_named_entity + off, &eid, 4);
+    off += 4;
+
+    memcpy(pkt_named_entity + off, &name_len, 2);
+    off += 2;
+
+    // pkt_named_entity[off++] = 0x00; 0
+    // pkt_named_entity[off++] = 'A'; 1
+    // pkt_named_entity[off++] = 0x00; 2
+    // pkt_named_entity[off++] = 'l'; 3
+    // pkt_named_entity[off++] = 0x00; 4
+    // pkt_named_entity[off++] = 'b'; 5
+    // pkt_named_entity[off++] = 0x00; 6
+    // pkt_named_entity[off++] = (uint8_t)('A' + sender->player.entity_id); 7
+
+    int idx = 0;
+    for (int i = 0; i < len * 2; i++)
+    {
+        if (!(i % 2))
+        {
+            pkt_named_entity[off++] = 0x00;
+            continue;
+        }
+
+        pkt_named_entity[off++] = name[idx++];
+    }
+
+    memcpy(pkt_named_entity + off, &x, 4);
+    off += 4;
+
+    memcpy(pkt_named_entity + off, &y, 4);
+    off += 4;
+
+    memcpy(pkt_named_entity + off, &z, 4);
+    off += 4;
+
+    pkt_named_entity[off++] = 0; // rotation
+    pkt_named_entity[off++] = 0; // pitch
+
+    memcpy(pkt_named_entity + off, &item, 2);
+    off += 2;
+
+    *pkt_len = pkt_size;
+    return pkt_named_entity;
 }

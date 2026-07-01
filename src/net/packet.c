@@ -8,15 +8,20 @@
 // }
 
 const packet_meta_t PLTB[256] = {
-    [LOGIN] = {LOGIN, 16, 6, 1},
-    [HANDSHAKE] = {HANDSHAKE, 3, 2, 1},
-    [POSITION] = {POSITION, 34, 0, 0},
-    [LOOK] = {LOOK, 10, 0, 0},
-    [POSITION_AND_LOOK] = {POSITION_AND_LOOK, 42, 0, 0},
-    [DISCONNECT] = {DISCONNECT, 3, 2, 1},
-    [KEEP_ALIVE] = {KEEP_ALIVE, 1, 0, 0}};
+    [LOGIN] = {
+        .id = LOGIN,
+        .minSize = 16,
+        .sizeOffset = 6,
+        .isSized = 1},
+    [HANDSHAKE] = {.id = HANDSHAKE, .minSize = 3, .sizeOffset = 2, .isSized = 1},
+    [POSITION] = {.id = POSITION, .minSize = 34, .sizeOffset = 0, .isSized = 0},
+    [LOOK] = {.id = LOOK, .minSize = 10, .sizeOffset = 0, .isSized = 0},
+    [POSITION_AND_LOOK] = {.id = POSITION_AND_LOOK, .minSize = 42, .sizeOffset = 0, .isSized = 0},
+    [DISCONNECT] = {.id = DISCONNECT, .minSize = 3, .sizeOffset = 2, .isSized = 1},
+    [KEEP_ALIVE] = {.id = KEEP_ALIVE, .minSize = 1, .sizeOffset = 0, .isSized = 0},
+    [ON_GROUND] = {.id = ON_GROUND, .minSize = 2, .sizeOffset = 0, .isSized = 0}};
 
-int PKT_Assemble(client *cl, cmd_queue *queue)
+int PKT_Assemble(server *srv, client *cl, cmd_queue *queue)
 {
     packet_t packet;
 
@@ -42,7 +47,7 @@ int PKT_Assemble(client *cl, cmd_queue *queue)
         // printf("packet_ptr=%p, size2=%d\n", packet_ptr, size);
         size = 0;
 
-        printf("packet_id=%ld\n", *packet_ptr);
+        // printf("packet_id=%ld\n", *packet_ptr);
         if (PLTB[*packet_ptr].id == 0)
         {
             printf("Unknown Packet Type\n");
@@ -56,7 +61,7 @@ int PKT_Assemble(client *cl, cmd_queue *queue)
         // printf("%d\n", cl->net.packet_len);
         PKT_Init(&packet, *packet_ptr, packet_ptr, size);
 
-        if ((rval = PKT_Parser(&packet, cl, queue)) == PACKET_DISCONNECT)
+        if ((rval = PKT_Parser(srv, &packet, cl, queue)) == PACKET_DISCONNECT)
             return PACKET_DISCONNECT;
     }
 
@@ -66,7 +71,7 @@ int PKT_Assemble(client *cl, cmd_queue *queue)
 /*
     Packet Validation -> sends packet to command constructor?
 */
-int PKT_Parser(packet_t *packet, client *sender, cmd_queue *queue)
+int PKT_Parser(server *srv, packet_t *packet, client *sender, cmd_queue *queue)
 {
     game_command_t *cmd = malloc(sizeof(game_command_t));
     packet_id_t id = packet->id;
@@ -94,7 +99,7 @@ int PKT_Parser(packet_t *packet, client *sender, cmd_queue *queue)
     {
         *cmd = (game_command_t){.id = LOGIN, .sender = sender};
         printf("Login\n");
-        return GAME_Login(cmd);
+        return GAME_Login(srv, cmd);
     }
     case LOOK:
     {
@@ -116,12 +121,12 @@ int PKT_Parser(packet_t *packet, client *sender, cmd_queue *queue)
         cmd->id = POSITION;
         cmd->payload.position = (cmd_client_position_t){X, Y, stance, Z, on_ground};
         cmd->sender = sender;
+
         break;
     }
     case POSITION_AND_LOOK:
-    {
+    case ON_GROUND:
         return 0;
-    }
     case DISCONNECT:
     {
         return PACKET_DISCONNECT;

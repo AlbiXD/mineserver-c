@@ -47,7 +47,7 @@ void NEVENT_Disconnect(server *srv, client *cl)
     };
 }
 
-int NEVENT_Read(client *cl, cmd_queue *queue)
+int NEVENT_Read(server *srv, client *cl, cmd_queue *queue)
 {
     uint8_t *client_buffer = cl->net.buffer;
 
@@ -105,7 +105,7 @@ int NEVENT_Read(client *cl, cmd_queue *queue)
     if (new_data)
     {
         // printf("Assembling packet\n");
-        rval = PKT_Assemble(cl, queue);
+        rval = PKT_Assemble(srv, cl, queue);
         // printf("%d\n", rval);
         if (rval == PACKET_UNSUPPORTED)
         {
@@ -154,7 +154,7 @@ void NEVENT_Handle(server *srv)
             // Handle client data
             // printf("SERVER: Received data from client on fd %d\n", pfd[i].fd);
             int rval = 0;
-            if ((rval = NEVENT_Read(cl, &srv->queue)) == PACKET_ERROR || rval == PACKET_DISCONNECT)
+            if ((rval = NEVENT_Read(srv, cl, &srv->queue)) == PACKET_ERROR || rval == PACKET_DISCONNECT)
             {
                 // printf("rval=%d\n", rval);
                 NEVENT_Disconnect(srv, cl);

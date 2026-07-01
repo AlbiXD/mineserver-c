@@ -15,7 +15,8 @@ typedef enum
     POSITION = 0x0B,
     LOOK = 0x0C,
     POSITION_AND_LOOK = 0x0D,
-    DISCONNECT = 0xFF
+    DISCONNECT = 0xFF,
+    ON_GROUND = 0x0A
 } packet_id_t;
 
 typedef struct
@@ -49,10 +50,10 @@ typedef enum
     PACKET_DISCONNECT = -7
 } packet_status_t;
 
-int PKT_Assemble(client *cl, cmd_queue *queue);
+int PKT_Assemble(server *srv, client *cl, cmd_queue *queue);
 void PKT_Mmove(uint8_t *client_buffer, uint8_t *packet, size_t packet_len);
 int PKT_LengthCheck(size_t offset, size_t remaining_bytes, size_t size);
-int PKT_Parser(packet_t *packet, client *sender, cmd_queue *queue);
+int PKT_Parser(server *srv, packet_t *packet, client *sender, cmd_queue *queue);
 int PKT_Init(packet_t *packet, packet_id_t id, uint8_t *payload, size_t packet_length);
 int PKT_Length(uint8_t *client_buffer, uint8_t *packet_pointer, size_t *bytes_read_ptr, packet_id_t packet_id);
 #endif

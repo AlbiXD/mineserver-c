@@ -2,6 +2,9 @@
 #define PLAYER_H
 
 #include <stdint.h>
+
+extern int global_id;
+
 typedef struct
 {
 
@@ -20,10 +23,16 @@ typedef struct
 
 typedef struct
 {
-    uint8_t username[17];
     player_position_t position;
     player_look_t look;
     uint8_t on_ground;
+} player_location_t;
+
+typedef struct
+{
+    int entity_id;
+    uint8_t username[17];
+    player_location_t loc;
 } player_t;
 
 #endif

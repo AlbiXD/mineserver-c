@@ -5,6 +5,7 @@
 
 typedef struct cmd_queue cmd_queue;
 typedef struct client client;
+typedef struct server server;
 
 typedef struct
 {
@@ -46,9 +47,10 @@ typedef struct
     command_payload_t payload;
 } game_command_t;
 
-int GAME_Tick(cmd_queue *queue);
-int GAME_Login(game_command_t *cmd);
+int GAME_Tick(cmd_queue *queue, server *srv);
+int GAME_Login(server *srv, game_command_t *cmd);
 int GAME_Handshake(game_command_t *cmd);
 int GAME_KeepAlive(game_command_t *cmd);
+uint8_t *GAME_DrawEntity(uint8_t *name, int16_t name_len, client *sender, int *pkt_len);
 
 #endif
